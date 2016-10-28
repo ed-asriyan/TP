@@ -15,7 +15,8 @@ void insertion_sort(T* array, int length) {
 		T tmp = array[i];
 		int j = i;
 		while (j > 0 && array[j - 1] > tmp) {
-			array[j] = array[--j];
+			array[j] = array[j - 1];
+			--j;
 		}
 		array[j] = tmp;
 	}
