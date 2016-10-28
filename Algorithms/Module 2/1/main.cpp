@@ -11,7 +11,7 @@ void insertion_sort(T* array, int length) {
 		return;
 	}
 
-	for (int i = 1; i < length; i++) {
+	for (int i = 1; i < length; ++i) {
 		T tmp = array[i];
 		int j = i;
 		while (j > 0 && array[j - 1] > tmp) {
