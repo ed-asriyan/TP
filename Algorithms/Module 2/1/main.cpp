@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 
 /**
  * Sorts elements of the array by insertion method
@@ -23,6 +24,25 @@ void insertion_sort(T* array, int length) {
 }
 
 int main() {
-	std::cout << "Hello, World!" << std::endl;
+	int n = 0;
+	std::cin >> n;
+
+	std::string* lines = new std::string[n];
+	for (int i = 0; i < n; ++i) {
+		std::getline(std::cin, lines[i]);
+		std::cin >> lines[i];
+	}
+
+	// if last line is empty
+	n -= !lines[n - 1].size();
+
+	insertion_sort(lines, n);
+
+	for (int i = 0; i < n; ++i) {
+		std::cout << lines[i] << std::endl;
+	}
+
+	delete[] lines;
+
 	return 0;
 }
