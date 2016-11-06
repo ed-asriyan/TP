@@ -17,7 +17,52 @@
  */
 
 #include <iostream>
-#include <algorithm>
+
+namespace HeapSort {
+	template<class T>
+	void _siftDown(T* array, int start, int end) {
+		int root = start;
+
+		while (root * 2 + 1 <= end) {
+			int child = root * 2 + 1;
+			if (child + 1 <= end && array[child] < array[child + 1]) {
+				++child;
+			}
+			if (array[root] < array[child]) {
+				std::swap(array[root], array[child]);
+				root = child;
+			} else {
+				return;
+			}
+		}
+	}
+
+	template<class T>
+	void _heapyfy(T* array, int count) {
+		int start = (count - 2) / 2;
+		while (start >= 0) {
+			_siftDown(array, start, count - 1);
+			--start;
+		}
+	}
+
+	/**
+	 * @brief Sorts the elements in the sequence [first,last) into ascending order.
+	 * @param array Iterator to the initial position of the sequence to be sorted
+	 * @param count Length of the sequence to be sorted.
+	 */
+	template<class T>
+	void Sort(T* array, int count) {
+		_heapyfy(array, count);
+
+		--count;
+		while (count > 0) {
+			std::swap(array[count], array[0]);
+			--count;
+			_siftDown(array, 0, count);
+		}
+	}
+}
 
 /**
  * @brief Represents shopping time span
@@ -156,8 +201,7 @@ int main() {
 		new(shoppers + i)ShoppingTimeSpan(in, out);
 	}
 
-	// todo: implement the sort function and use it instead of std::sort
-	std::sort(shoppers, shoppers + shopper_count);
+	HeapSort::Sort(shoppers, shopper_count);
 	std::cout << CalcRequiredAdNumber(shoppers, shoppers + shopper_count) << std::endl;
 
 	// free shoppers array
