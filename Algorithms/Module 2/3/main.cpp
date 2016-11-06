@@ -17,6 +17,7 @@
  */
 
 #include <iostream>
+#include <algorithm>
 
 /**
  * @brief Represents shopping time span
@@ -33,6 +34,8 @@ class ShoppingTimeSpan {
 		 * @param out_time Time when shopper goes out.
 		 */
 		ShoppingTimeSpan(int in_time, int out_time);
+
+		bool CanWatch(int ad_time) const;
 
 		bool operator<(const ShoppingTimeSpan& rhs) const;
 		bool operator>(const ShoppingTimeSpan& rhs) const;
@@ -93,6 +96,51 @@ int ShoppingTimeSpan::get_in_time() const {
 	return in_time;
 }
 
+bool ShoppingTimeSpan::CanWatch(int ad_time) const {
+	return in_time <= ad_time && ad_time <= out_time;
+}
+
+/**
+ * @brief Calculates reuqired number of ad impressions.
+ * @param begin Iterator to the ititial position of the sorted sequence of ShoppingTimeSpan.
+ * @param end Iterator to the final position of the sorted sequence of ShoppingTimeSpan.
+ * @return Mininal reuqired number of ad impressions
+ */
+template<class ITERATOR>
+int CalcRequiredAdNumber(const ITERATOR begin, const ITERATOR end) {
+	// the exceptional case
+	if (begin == end) {
+		return 0;
+	}
+
+	// store only two last ad impressions
+	int ad_time1 = begin->get_out_time();
+	int ad_time2 = ad_time1 - 1;
+	int result = 2;
+
+	for (auto shopper = begin + 1; shopper != end; ++shopper) {
+		const int shopper_out_time = shopper->get_out_time();
+
+		// if the current shopper can not watch ad_time1
+		if (!shopper->CanWatch(ad_time1)) {
+			// if shopper_out_time is available for new ad, ad_time1 = shopper_out_time
+			// if not, ad_time1 = shopper_out_time - 1
+			ad_time1 = shopper_out_time - (ad_time2 == shopper_out_time);
+			++result;
+		}
+
+		// if the current shopper can not watch ad_time2
+		if (!shopper->CanWatch(ad_time2)) {
+			// if shopper_out_time is available for new ad, ad_time2 = shopper_out_time
+			// if not, ad_time2 = shopper_out_time - 1
+			ad_time2 = shopper_out_time - (ad_time1 == shopper_out_time);
+			++result;
+		}
+	}
+
+	return result;
+}
+
 int main() {
 	int shopper_count = 0;
 	std::cin >> shopper_count;
@@ -108,7 +156,9 @@ int main() {
 		new(shoppers + i)ShoppingTimeSpan(in, out);
 	}
 
-	// todo:
+	// todo: implement the sort function and use it instead of std::sort
+	std::sort(shoppers, shoppers + shopper_count);
+	std::cout << CalcRequiredAdNumber(shoppers, shoppers + shopper_count) << std::endl;
 
 	// free shoppers array
 	for (int i = shopper_count - 1; i >= 0; --i) {
