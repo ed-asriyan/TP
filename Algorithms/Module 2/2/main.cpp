@@ -94,8 +94,9 @@ namespace BinaryHeap {
 					*/
 					Node RightChild() const;
 
-					friend T Heap<T>::get_max() const;
+					friend Node Heap<T>::get_max() const;
 					friend void Heap<T>::ChangeNodeValue(Node, const T& value);
+					friend T Heap<T>::Extract(Heap<T>::Node node);
 			};
 
 			template<class ITERATOR>
@@ -110,16 +111,15 @@ namespace BinaryHeap {
 			void ChangeNodeValue(Node, const T& value);
 
 			/**
-			 * @brief Extracts max element from heap.
-			 * @return Max element.
+			 * @brief Extracts element from heap.
 			 */
-			T ExtractMax();
+			T Extract(Heap<T>::Node node);
 
 			/**
 			 * Returns the max element of the heap if it exists; otherwise, trows NodeNotExistsException.
 			 * @return The max element of the heap.
 			 */
-			T get_max() const;
+			Node get_max() const;
 
 			/**
 			 * @brief Returns heap size.
@@ -207,9 +207,9 @@ namespace BinaryHeap {
 	}
 
 	template<class T>
-	T Heap<T>::get_max() const {
+	typename Heap<T>::Node Heap<T>::get_max() const {
 		if (!data.size()) throw NodeNotExistsException();
-		return *Heap<T>::Node(data, 0);
+		return Heap<T>::Node(data, 0);
 	}
 
 	template<class T>
@@ -229,15 +229,13 @@ namespace BinaryHeap {
 	}
 
 	template<class T>
-	T Heap<T>::ExtractMax() {
+	T Heap<T>::Extract(Heap<T>::Node node) {
 		if (!data.size()) throw NodeNotExistsException();
 
-		T max = data[0];
-		data.erase(data.begin());
-
-		heapify(0);
-
-		return max;
+		T result = data[node.index];
+		data.erase(data.begin() + node.index);
+		heapify(node.index);
+		return result;
 	}
 
 	template<class T>
