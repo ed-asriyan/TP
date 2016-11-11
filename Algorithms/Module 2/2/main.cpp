@@ -95,17 +95,17 @@ namespace BinaryHeap {
 					Node RightChild() const;
 
 					friend Node Heap<T>::get_top() const;
-					friend Node Heap<T>::IncreaseNodeValue(Node, const T& value);
+					friend void Heap<T>::ChangeNodeValue(Node, const T& value);
 			};
 
 			Heap(const std::initializer_list<T>&);
 
 			/**
-			 * @brief Rewrites heap element with valus which is not less then the current one.
+			 * @brief Rewrites heap element with new value.
 			 * @param value Value that is necessary to replace with.
 			 * @return New Node of the current element.
 			 */
-			Node IncreaseNodeValue(Node, const T& value);
+			void ChangeNodeValue(Node, const T& value);
 
 			/**
 			 * @brief Extracts max element from heap.
@@ -199,18 +199,19 @@ namespace BinaryHeap {
 	}
 
 	template<class T>
-	typename Heap<T>::Node Heap<T>::IncreaseNodeValue(Heap<T>::Node node, const T& value) {
+	void Heap<T>::ChangeNodeValue(Heap<T>::Node node, const T& value) {
 		if (&node.data != &data) throw ForeignNodeException();
 
-		int index = node.index;
-		if (value < data[index]) throw InvalidNodeValueException();
-		data[index] = value;
-		while (index > 0 && data[index / 2] < data[index]) {
-			std::swap(data[index], data[index >> 1]);
-			index >>= 1;
+		if (value > data[node.index]) {
+			data[node.index] = value;
+			while (node.index > 0 && data[node.index / 2] < data[node.index]) {
+				std::swap(data[node.index], data[node.index >> 1]);
+				node.index >>= 1;
+			}
+		} else if (value < data[node.index]) {
+			data[node.index] = value;
+			heapify(node.index);
 		}
-
-		return Node(data, index);
 	}
 
 	template<class T>
