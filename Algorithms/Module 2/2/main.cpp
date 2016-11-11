@@ -103,7 +103,6 @@ namespace BinaryHeap {
 			/**
 			 * @brief Rewrites heap element with new value.
 			 * @param value Value that is necessary to replace with.
-			 * @return New Node of the current element.
 			 */
 			void ChangeNodeValue(Node, const T& value);
 
@@ -118,6 +117,12 @@ namespace BinaryHeap {
 			 * @return The max element of the heap.
 			 */
 			Node get_top() const;
+
+			/**
+			 * @brief Returns heap size.
+			 * @return Heap size.
+			 */
+			int get_size() const;
 
 	};
 
@@ -224,6 +229,11 @@ namespace BinaryHeap {
 		heapify(0);
 
 		return max;
+	}
+
+	template<class T>
+	int Heap<T>::get_size() const {
+		return (int) data.size();
 	}
 
 }
