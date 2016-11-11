@@ -41,6 +41,16 @@ namespace BinaryHeap {
 			class NodeNotExistsException : public std::exception {};
 
 			/**
+			 * @brief Exception that tells that the value os the node is invalid.
+			 */
+			class InvalidNodeValueException : public std::exception {};
+
+			/**
+			 * @brief Exception that tells that the node do not belong to current Heap (current container).
+			 */
+			class ForeignNodeException : public std::exception {};
+
+			/**
 			 * @brief Node of the binary heap tree.
 			 */
 			class Node {
@@ -85,9 +95,17 @@ namespace BinaryHeap {
 					Node RightChild() const;
 
 					friend Node Heap<T>::get_top() const;
+					friend Node Heap<T>::IncreaseNodeValue(Node, const T& value);
 			};
 
 			Heap(const std::initializer_list<T>&);
+
+			/**
+			 * @brief Rewrites heap element with valus which is not less then the current one.
+			 * @param value Value that is necessary to replace with.
+			 * @return New Node of the current element.
+			 */
+			Node IncreaseNodeValue(Node, const T& value);
 
 			/**
 			 * Returns the max element of the heap if it exists; otherwise, trows NodeNotExistsException.
@@ -172,6 +190,21 @@ namespace BinaryHeap {
 	typename Heap<T>::Node Heap<T>::get_top() const {
 		if (!data.size()) throw NodeNotExistsException();
 		return Heap<T>::Node(data, 0);
+	}
+
+	template<class T>
+	typename Heap<T>::Node Heap<T>::IncreaseNodeValue(Heap<T>::Node node, const T& value) {
+		if (&node.data != &data) throw ForeignNodeException();
+
+		int index = node.index;
+		if (value < data[index]) throw InvalidNodeValueException();
+		data[index] = value;
+		while (index > 0 && data[index / 2] < data[index]) {
+			std::swap(data[index], data[index >> 1]);
+			index >>= 1;
+		}
+
+		return Node(data, index);
 	}
 
 }
