@@ -98,6 +98,9 @@ namespace BinaryHeap {
 					friend void Heap<T>::ChangeNodeValue(Node, const T& value);
 			};
 
+			template<class ITERATOR>
+			Heap(const ITERATOR& begin, const ITERATOR& end);
+
 			Heap(const std::initializer_list<T>&);
 
 			/**
@@ -167,6 +170,12 @@ namespace BinaryHeap {
 		if (!HaveRight()) throw ChildNotExistsException();
 		return Heap::Node(data, get_right_index());
 	}
+
+	template<class T>
+	template<class ITERATOR>
+	Heap<T>::Heap(const ITERATOR& begin, const ITERATOR& end) {
+		data.insert(data.begin(), begin, end);
+	};
 
 	template<class T>
 	Heap<T>::Heap(const std::initializer_list<T>& init_list) {
