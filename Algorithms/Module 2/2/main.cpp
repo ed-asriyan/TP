@@ -94,7 +94,7 @@ namespace BinaryHeap {
 					*/
 					Node RightChild() const;
 
-					friend Node Heap<T>::get_top() const;
+					friend T Heap<T>::get_max() const;
 					friend void Heap<T>::ChangeNodeValue(Node, const T& value);
 			};
 
@@ -119,7 +119,7 @@ namespace BinaryHeap {
 			 * Returns the max element of the heap if it exists; otherwise, trows NodeNotExistsException.
 			 * @return The max element of the heap.
 			 */
-			Node get_top() const;
+			T get_max() const;
 
 			/**
 			 * @brief Returns heap size.
@@ -207,9 +207,9 @@ namespace BinaryHeap {
 	}
 
 	template<class T>
-	typename Heap<T>::Node Heap<T>::get_top() const {
+	T Heap<T>::get_max() const {
 		if (!data.size()) throw NodeNotExistsException();
-		return Heap<T>::Node(data, 0);
+		return *Heap<T>::Node(data, 0);
 	}
 
 	template<class T>
