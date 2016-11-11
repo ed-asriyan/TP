@@ -108,6 +108,12 @@ namespace BinaryHeap {
 			Node IncreaseNodeValue(Node, const T& value);
 
 			/**
+			 * @brief Extracts max element from heap.
+			 * @return Max element.
+			 */
+			T ExtractMax();
+
+			/**
 			 * Returns the max element of the heap if it exists; otherwise, trows NodeNotExistsException.
 			 * @return The max element of the heap.
 			 */
@@ -205,6 +211,18 @@ namespace BinaryHeap {
 		}
 
 		return Node(data, index);
+	}
+
+	template<class T>
+	T Heap<T>::ExtractMax() {
+		if (!data.size()) throw NodeNotExistsException();
+
+		T max = data[0];
+		data.erase(data.begin());
+
+		heapify(0);
+
+		return max;
 	}
 
 }
