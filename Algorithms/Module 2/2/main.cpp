@@ -33,6 +33,7 @@ namespace BinaryHeap {
 			std::vector<T> data;
 
 			void heapify(int i);
+			void heapifyAll();
 
 		public:
 			/**
@@ -175,14 +176,13 @@ namespace BinaryHeap {
 	template<class ITERATOR>
 	Heap<T>::Heap(const ITERATOR& begin, const ITERATOR& end) {
 		data.insert(data.begin(), begin, end);
-	};
+		heapifyAll();
+	}
 
 	template<class T>
 	Heap<T>::Heap(const std::initializer_list<T>& init_list) {
 		data = init_list;
-		for (int i = (int) data.size() - 1; i >= 0; --i) {
-			heapify(i);
-		}
+		heapifyAll();
 	}
 
 	template<class T>
@@ -203,6 +203,13 @@ namespace BinaryHeap {
 		if (largest != i) {
 			std::swap(data[i], data[largest]);
 			heapify(largest);
+		}
+	}
+
+	template<class T>
+	void Heap<T>::heapifyAll() {
+		for (int i = (int) data.size() - 1; i >= 0; --i) {
+			heapify(i);
 		}
 	}
 
