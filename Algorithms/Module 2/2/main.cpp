@@ -21,6 +21,7 @@
 #include <iostream>
 #include <initializer_list>
 #include <exception>
+#include <algorithm>
 #include <vector>
 
 namespace BinaryHeap {
@@ -278,7 +279,56 @@ namespace BinaryHeap {
 
 }
 
+template<class ITERATOR>
+int CalcSolution(const ITERATOR& begin, const ITERATOR& end, int strength) {
+	if (begin == end) {
+		return 0;
+	}
+
+	BinaryHeap::Heap<int> heap(begin, end);
+
+	int result = 0;
+	while (heap.get_size()) {
+		int remaining_strength = strength;
+		std::vector<int> items;
+		items.reserve((unsigned long) heap.get_size());
+
+		while (remaining_strength && heap.get_size()) {
+			auto max = heap.get_max();
+
+			if (remaining_strength < *max) {
+				break;
+			} else {
+				if (*max == 1) {
+					remaining_strength -= heap.Extract(max);
+				} else {
+					remaining_strength -= *max;
+					items.push_back(heap.Extract(max) / 2);
+				}
+			}
+		}
+
+		heap.Insert(items.begin(), items.end());
+
+		++result;
+	}
+
+	return result;
+}
+
 int main() {
-	std::cout << "Hello, World!" << std::endl;
+	int items_count;
+	std::cin >> items_count;
+
+	int* items = new int[items_count];
+	for (int i = 0; i < items_count; ++i) {
+		std::cin >> items[i];
+	}
+
+	int strength;
+	std::cin >> strength;
+
+	std::cout << CalcSolution(items, items + items_count, strength) << std::endl;
+
 	return 0;
 }
