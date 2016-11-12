@@ -57,8 +57,8 @@ namespace BinaryHeap {
 			 */
 			class Node {
 				private:
-					int index;
 					const std::vector<T>& data;
+					int index;
 
 					Node(const std::vector<T>& data, int index);
 
@@ -198,17 +198,17 @@ namespace BinaryHeap {
 
 	template<class T>
 	void Heap<T>::heapify(int i) {
-		if (i >= data.size()) {
+		if (i >= (int) data.size()) {
 			return;
 		}
 		int left = i << 1;
 		int right = left + 1;
 		int largest = i;
 
-		if (left < data.size() && data[left] > data[largest]) {
+		if (left < (int) data.size() && data[left] > data[largest]) {
 			largest = left;
 		}
-		if (right < data.size() && data[right] > data[largest]) {
+		if (right < (int) data.size() && data[right] > data[largest]) {
 			largest = right;
 		}
 		if (largest != i) {
