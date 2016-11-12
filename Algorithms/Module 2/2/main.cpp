@@ -117,6 +117,20 @@ namespace BinaryHeap {
 			T Extract(Heap<T>::Node node);
 
 			/**
+			 * @brief Inserts the element into the heap.
+			 * @param value Value to insert.
+			 */
+			void Insert(const T& value);
+
+			/**
+			 * @brief Inserts the range of elements
+			 * @param begin The initial iterator to the inserting range.
+			 * @param end The final iterator to the inserting range.
+			 */
+			template<class ITERATOR>
+			void Insert(const ITERATOR& begin, const ITERATOR& end);
+
+			/**
 			 * Returns the max element of the heap if it exists; otherwise, trows NodeNotExistsException.
 			 * @return The max element of the heap.
 			 */
@@ -175,15 +189,11 @@ namespace BinaryHeap {
 	template<class T>
 	template<class ITERATOR>
 	Heap<T>::Heap(const ITERATOR& begin, const ITERATOR& end) {
-		data.insert(data.begin(), begin, end);
-		heapifyAll();
+		Insert(begin, end);
 	}
 
 	template<class T>
-	Heap<T>::Heap(const std::initializer_list<T>& init_list) {
-		data = init_list;
-		heapifyAll();
-	}
+	Heap<T>::Heap(const std::initializer_list<T>& init_list) :Heap(init_list.begin(), init_list.end()) {}
 
 	template<class T>
 	void Heap<T>::heapify(int i) {
@@ -248,6 +258,22 @@ namespace BinaryHeap {
 	template<class T>
 	int Heap<T>::get_size() const {
 		return (int) data.size();
+	}
+
+	template<class T>
+	void Heap<T>::Insert(const T& value) {
+		data.push_back(value);
+		heapifyAll();
+	}
+
+	template<class T>
+	template<class ITERATOR>
+	void Heap<T>::Insert(const ITERATOR& begin, const ITERATOR& end) {
+		int data_size = (int) data.size();
+		data.insert(data.begin(), begin, end);
+		for (int i = (int) data.size() - data_size - 1; i >= 0; --i) {
+			heapify(i);
+		}
 	}
 
 }
