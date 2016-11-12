@@ -143,6 +143,9 @@ namespace BinaryHeap {
 			 */
 			int get_size() const;
 
+			template<class I>
+			friend std::ostream& operator<<(std::ostream& os, const BinaryHeap::Heap<I>& heap);
+
 	};
 
 	template<class T>
@@ -275,6 +278,14 @@ namespace BinaryHeap {
 		for (int i = (int) data.size() - data_size - 1; i >= 0; --i) {
 			heapify(i);
 		}
+	}
+
+	template<class I>
+	std::ostream& operator<<(std::ostream& os, const BinaryHeap::Heap<I>& heap) {
+		for (const auto& item: heap.data) {
+			os << item << ' ';
+		}
+		return os;
 	}
 
 }
