@@ -166,14 +166,17 @@ namespace Heap {
  * @return Solution
  */
 template<class ITERATOR>
-int CalcSolution(const ITERATOR& begin, const ITERATOR& end, int strength) {
+int CalcSolution(const ITERATOR& begin, const ITERATOR& end, const int strength) {
 	if (begin == end) {
 		return 0;
 	}
 
+	int result = 0;
 	Heap::BinaryHeap<int> heap(begin, end);
 
-	int result = 0;
+	std::vector<int> picked_fruits;
+	picked_fruits.reserve((unsigned int) heap.get_size());
+
 	while (heap.get_size()) {
 		int remaining_strength = strength;
 
@@ -183,25 +186,28 @@ int CalcSolution(const ITERATOR& begin, const ITERATOR& end, int strength) {
 		int fruit = 0;
 
 		// while fruits are exist and the boy has enough strength to pick the current fruit
-		while (remaining_strength >= fruit && heap.get_size()) {
+		while (heap.get_size() && remaining_strength >= heap.Top()) {
 			// getting the heaviest fruit
-			fruit = heap.Pop();
+			remaining_strength -= fruit = heap.Pop();
 
-			// if the boy can pick this fruit
-			if (remaining_strength >= fruit) {
-				remaining_strength -= fruit;
-				// if fruit weight more then 1
-				if (fruit > 1) {
-					// put back half of the fruit
-					heap.Push(fruit >> 1);
-				}
+			// if fruit weight more then 1
+			if (fruit > 1) {
+				// put the fruit in picked_fruits
+				picked_fruits.push_back(fruit);
 			}
+		}
+
+		// put back half part of each picked fruit
+		while (picked_fruits.size()) {
+			heap.Push(*(picked_fruits.end() - 1) >> 1);
+			picked_fruits.pop_back();
 		}
 
 		++result;
 	}
 
 	return result;
+
 }
 
 int main() {
