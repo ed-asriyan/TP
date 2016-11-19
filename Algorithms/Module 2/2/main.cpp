@@ -193,7 +193,7 @@ int CalcSolution(const ITERATOR& begin, const ITERATOR& end, int strength) {
 				// if fruit weight more then 1
 				if (fruit > 1) {
 					// put back half of the fruit
-					heap.Push(fruit << 1);
+					heap.Push(fruit >> 1);
 				}
 			}
 		}
