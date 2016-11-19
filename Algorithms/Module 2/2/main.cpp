@@ -36,10 +36,7 @@ namespace Heap {
 	template<class T>
 	class BinaryHeap {
 		private:
-			std::vector<T> data;
-
-			void heapify(int i);
-			void heapify();
+			std::vector<T> data = {T()};
 
 		public:
 			/**
@@ -103,58 +100,51 @@ namespace Heap {
 	                                                                                 init_list.end()) {}
 
 	template<class T>
-	void BinaryHeap<T>::heapify(int i) {
-		if (i >= (int) data.size()) {
-			return;
-		}
-		int left = i << 1;
-		int right = left + 1;
-		int largest = i;
-
-		if (left < (int) data.size() && data[left] > data[largest]) {
-			largest = left;
-		}
-		if (right < (int) data.size() && data[right] > data[largest]) {
-			largest = right;
-		}
-		if (largest != i) {
-			std::swap(data[i], data[largest]);
-			heapify(largest);
-		}
-	}
-
-	template<class T>
-	void BinaryHeap<T>::heapify() {
-		for (int i = (int) data.size() - 1; i >= 0; --i) {
-			heapify(i);
-		}
-	}
-
-	template<class T>
 	const T& BinaryHeap<T>::Top() const {
-		if (!data.size()) throw EmptyHeapException();
-		return data[0];
+		if (!get_size()) throw EmptyHeapException();
+		return data[1];
 	}
 
 	template<class T>
 	T BinaryHeap<T>::Pop() {
-		if (!data.size()) throw EmptyHeapException();
+		if (!get_size()) throw EmptyHeapException();
 
-		T result = data[0];
-		data.erase(data.begin());
-		heapify();
+		int result = data[1];
+		int size = get_size();
+
+		std::swap(data[size], data[1]);
+		data.pop_back();
+
+		for (int i = 1; i << 1 < size;) {
+			i <<= 1;
+			if (i + 1 < size && data[i] < data[i + 1]) {
+				i += 1;
+			}
+			if (data[i >> 1] < data[i]) {
+				std::swap(data[i >> 1], data[i]);
+			}
+		}
+
 		return result;
 	}
 
 	template<class T>
 	int BinaryHeap<T>::get_size() const {
-		return (int) data.size();
+		return (int) data.size() - 1;
 	}
 
 	template<class T>
 	void BinaryHeap<T>::Push(const T& value) {
+		int size = get_size();
 		data.push_back(value);
-		heapify();
+		for (int i = size + 1; i > 1;) {
+			if (data[i] > data[i >> 1]) {
+				std::swap(data[i], data[i >> 1]);
+				i >>= 1;
+			} else {
+				break;
+			}
+		}
 	}
 }
 
