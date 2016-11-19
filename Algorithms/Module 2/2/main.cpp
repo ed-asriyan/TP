@@ -24,183 +24,86 @@
 #include <algorithm>
 #include <vector>
 
-namespace BinaryHeap {
+namespace Heap {
+	/**
+	 * @brief The exception that is thrown when extracting from empty heap occur.
+	 */
+	class EmptyHeapException : public std::exception {};
+
 	/**
 	 * @brief Heap.
 	 */
 	template<class T>
-	class Heap {
+	class BinaryHeap {
 		private:
 			std::vector<T> data;
 
 			void heapify(int i);
-			void heapifyAll();
+			void heapify();
 
 		public:
 			/**
-			 * @brief Exception which tells that the required Node does not exists.
+			 * @brief Empty container constructor (default constructor).
+			 *
+			 * Constructs an empty heap, with no elements.
 			 */
-			class NodeNotExistsException : public std::exception {};
+			BinaryHeap() = default;
 
 			/**
-			 * @brief Exception that tells that the value os the node is invalid.
+			 * @brief Range constructor.
+			 * @param begin Iterator to the initial position in range.
+			 * @param end Iterator to the final position in range.
+			 *
+			 * Constructs a heap with as many elements as the range [first,last).
 			 */
-			class InvalidNodeValueException : public std::exception {};
-
-			/**
-			 * @brief Exception that tells that the node do not belong to current Heap (current container).
-			 */
-			class ForeignNodeException : public std::exception {};
-
-			/**
-			 * @brief Node of the binary heap tree.
-			 */
-			class Node {
-				private:
-					const std::vector<T>& data;
-					int index;
-
-					Node(const std::vector<T>& data, int index);
-
-					int get_left_index() const;
-					int get_right_index() const;
-				public:
-					/**
-					 * @brief Exception which tells that the Node have not a required child.
-					 */
-					class ChildNotExistsException : public std::exception {};
-
-					/**
-					 * @brief Returns a value that indicates whether the node has a right child.
-					 * @return true if the node has a right child; otherwise, false.
-					 */
-					bool HaveLeft() const;
-
-					/**
-					 * @brief Returns a value that indicates whether the node has a left child.
-					 * @return true if the node has a left child; otherwise, false.
-					 */
-					bool HaveRight() const;
-
-					const T& operator*() const;
-
-					/**
-					 * @brief Returns the left child if it exists; otherwise, thows ChildNotExistsException.
-					 * @return The left child of the node.
-					 */
-					Node LeftChild() const;
-
-					/**
-					* @brief Returns the right child if it exists; otherwise, thows ChildNotExistsException.
-					* @return The right child of the node.
-					*/
-					Node RightChild() const;
-
-					friend Node Heap<T>::get_max() const;
-					friend void Heap<T>::ChangeNodeValue(Node, const T& value);
-					friend T Heap<T>::Extract(Heap<T>::Node node);
-			};
-
 			template<class ITERATOR>
-			Heap(const ITERATOR& begin, const ITERATOR& end);
-
-			Heap(const std::initializer_list<T>&);
+			BinaryHeap(ITERATOR begin, ITERATOR end);
 
 			/**
-			 * @brief Rewrites heap element with new value.
-			 * @param value Value that is necessary to replace with.
+			 * @brief Constructs the heap with the contents of the initializer list init.
+			 * @param init Initializer list to initialize the elements of the heap with.
+			 * @return
 			 */
-			void ChangeNodeValue(Node, const T& value);
+			BinaryHeap(const std::initializer_list<T>& init);
 
 			/**
 			 * @brief Extracts element from heap.
 			 */
-			T Extract(Heap<T>::Node node);
+			T Pop();
 
 			/**
 			 * @brief Inserts the element into the heap.
 			 * @param value Value to insert.
 			 */
-			void Insert(const T& value);
-
-			/**
-			 * @brief Inserts the range of elements
-			 * @param begin The initial iterator to the inserting range.
-			 * @param end The final iterator to the inserting range.
-			 */
-			template<class ITERATOR>
-			void Insert(const ITERATOR& begin, const ITERATOR& end);
+			void Push(const T& value);
 
 			/**
 			 * Returns the max element of the heap if it exists; otherwise, trows NodeNotExistsException.
 			 * @return The max element of the heap.
 			 */
-			Node get_max() const;
+			const T& Top() const;
 
 			/**
 			 * @brief Returns heap size.
 			 * @return Heap size.
 			 */
 			int get_size() const;
-
-			template<class I>
-			friend std::ostream& operator<<(std::ostream& os, const BinaryHeap::Heap<I>& heap);
-
 	};
 
 	template<class T>
-	Heap<T>::Node::Node(const std::vector<T>& data, int index) :data(data), index(index) {
-
-	}
-
-	template<class T>
-	bool Heap<T>::Node::HaveLeft() const {
-		return get_left_index() < data.size();
-	}
-
-	template<class T>
-	bool Heap<T>::Node::HaveRight() const {
-		return get_right_index() < data.size();
-	}
-
-	template<class T>
-	const T& Heap<T>::Node::operator*() const {
-		return data[index];
-	}
-
-	template<class T>
-	typename Heap<T>::Node Heap<T>::Node::LeftChild() const {
-		if (!HaveLeft()) throw ChildNotExistsException();
-		return Heap::Node(data, get_left_index());
-	}
-
-	template<class T>
-	int Heap<T>::Node::get_left_index() const {
-		return (index << 2) + 1;
-	}
-
-	template<class T>
-	int Heap<T>::Node::get_right_index() const {
-		return (index << 2) + 2;
-	}
-
-	template<class T>
-	typename Heap<T>::Node Heap<T>::Node::RightChild() const {
-		if (!HaveRight()) throw ChildNotExistsException();
-		return Heap::Node(data, get_right_index());
-	}
-
-	template<class T>
 	template<class ITERATOR>
-	Heap<T>::Heap(const ITERATOR& begin, const ITERATOR& end) {
-		Insert(begin, end);
+	BinaryHeap<T>::BinaryHeap(ITERATOR begin, ITERATOR end) {
+		for (; begin != end; ++begin) {
+			Push(*begin);
+		}
 	}
 
 	template<class T>
-	Heap<T>::Heap(const std::initializer_list<T>& init_list) :Heap(init_list.begin(), init_list.end()) {}
+	BinaryHeap<T>::BinaryHeap(const std::initializer_list<T>& init_list) :BinaryHeap(init_list.begin(),
+	                                                                                 init_list.end()) {}
 
 	template<class T>
-	void Heap<T>::heapify(int i) {
+	void BinaryHeap<T>::heapify(int i) {
 		if (i >= (int) data.size()) {
 			return;
 		}
@@ -221,105 +124,79 @@ namespace BinaryHeap {
 	}
 
 	template<class T>
-	void Heap<T>::heapifyAll() {
+	void BinaryHeap<T>::heapify() {
 		for (int i = (int) data.size() - 1; i >= 0; --i) {
 			heapify(i);
 		}
 	}
 
 	template<class T>
-	typename Heap<T>::Node Heap<T>::get_max() const {
-		if (!data.size()) throw NodeNotExistsException();
-		return Heap<T>::Node(data, 0);
+	const T& BinaryHeap<T>::Top() const {
+		if (!data.size()) throw EmptyHeapException();
+		return data[0];
 	}
 
 	template<class T>
-	void Heap<T>::ChangeNodeValue(Heap<T>::Node node, const T& value) {
-		if (&node.data != &data) throw ForeignNodeException();
+	T BinaryHeap<T>::Pop() {
+		if (!data.size()) throw EmptyHeapException();
 
-		if (value > data[node.index]) {
-			data[node.index] = value;
-			while (node.index > 0 && data[node.index / 2] < data[node.index]) {
-				std::swap(data[node.index], data[node.index >> 1]);
-				node.index >>= 1;
-			}
-		} else if (value < data[node.index]) {
-			data[node.index] = value;
-			heapify(node.index);
-		}
-	}
-
-	template<class T>
-	T Heap<T>::Extract(Heap<T>::Node node) {
-		if (!data.size()) throw NodeNotExistsException();
-
-		T result = data[node.index];
-		data.erase(data.begin() + node.index);
-		heapify(node.index);
+		T result = data[0];
+		data.erase(data.begin());
+		heapify();
 		return result;
 	}
 
 	template<class T>
-	int Heap<T>::get_size() const {
+	int BinaryHeap<T>::get_size() const {
 		return (int) data.size();
 	}
 
 	template<class T>
-	void Heap<T>::Insert(const T& value) {
+	void BinaryHeap<T>::Push(const T& value) {
 		data.push_back(value);
-		heapifyAll();
+		heapify();
 	}
-
-	template<class T>
-	template<class ITERATOR>
-	void Heap<T>::Insert(const ITERATOR& begin, const ITERATOR& end) {
-		int data_size = (int) data.size();
-		data.insert(data.begin(), begin, end);
-		for (int i = (int) data.size() - data_size - 1; i >= 0; --i) {
-			heapify(i);
-		}
-	}
-
-	template<class I>
-	std::ostream& operator<<(std::ostream& os, const BinaryHeap::Heap<I>& heap) {
-		for (const auto& item: heap.data) {
-			os << item << ' ';
-		}
-		return os;
-	}
-
 }
 
+/**
+ * @brief Solves the problem
+ * @param begin Iterator to the initial position of the fruits sequence
+ * @param end Iterator to the final position of the fruits sequence
+ * @param strength Strength
+ * @return Solution
+ */
 template<class ITERATOR>
 int CalcSolution(const ITERATOR& begin, const ITERATOR& end, int strength) {
 	if (begin == end) {
 		return 0;
 	}
 
-	BinaryHeap::Heap<int> heap(begin, end);
+	Heap::BinaryHeap<int> heap(begin, end);
 
 	int result = 0;
 	while (heap.get_size()) {
 		int remaining_strength = strength;
-		std::vector<int> items;
-		items.reserve((unsigned long) heap.get_size());
 
-		while (remaining_strength && heap.get_size()) {
-			auto max = heap.get_max();
+		// weight of the current fruit.
+		// the initial value must be less or equal then remaining strength (in another way loop will not start).
+		// it will be changed in the following loop.
+		int fruit = 0;
 
-			if (remaining_strength < *max) {
-				break;
-			} else {
-				if (*max == 1) {
-					remaining_strength -= heap.Extract(max);
-				} else {
-					remaining_strength -= *max;
-					items.push_back(heap.Extract(max) / 2);
+		// while fruits are exist and the boy has enough strength to pick the current fruit
+		while (remaining_strength >= fruit && heap.get_size()) {
+			// getting the heaviest fruit
+			fruit = heap.Pop();
+
+			// if the boy can pick this fruit
+			if (remaining_strength >= fruit) {
+				remaining_strength -= fruit;
+				// if fruit weight more then 1
+				if (fruit > 1) {
+					// put back half of the fruit
+					heap.Push(fruit << 1);
 				}
 			}
 		}
-
-		heap.Insert(items.begin(), items.end());
 
 		++result;
 	}
