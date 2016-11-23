@@ -7,39 +7,64 @@
  */
 
 #include <iostream>
+#include <cstring>
 #include <cassert>
 
-template<class T>
-void CountSort(T* arr, int n, int bit) {
+namespace Sort {
 
-
-	T output[20];
-	int i, count[10] = {0};
-	for (i = 0; i < n; i++)
-		count[(arr[i] / bit) % 10]++;
-	for (i = 1; i < 10; i++)
-		count[i] += count[i - 1];
-	for (i = n - 1; i >= 0; i--) {
-		output[count[(arr[i] / bit) % 10] - 1] = arr[i];
-		count[(arr[i] / bit) % 10]--;
+	/**
+	 * @brief Returns byte value by it index.
+	 * @param value The instance of the object to extract the byte value.
+	 * @param byte Byte index.
+	 * @return Value of the byte.
+	 */
+	template<class T>
+	inline int _get_byte_by_index(const T& value, int byte) {
+		assert(sizeof(T) <= sizeof(1ULL));
+		return (value >> (8 * byte)) & 255;
 	}
-	for (i = 0; i < n; i++)
-		arr[i] = output[i];
-};
 
-/**
- * @brief Sorts the sequence by radix (LSD).
- * @param begin Iterator to the initial position in the sequence.
- * @param end Iterator to the initial position in the sequence.
- */
-template<class ITERATOR>
-void LsdSort(ITERATOR* begin, ITERATOR* end) {
+	/**
+	 * @brief Counting sort by p-th byte
+	 * @param begin Pointer to the initial position in the sequence.
+	 * @param count Sequence length.
+	 * @param byte Number of the byte to sort.
+	 */
+	template<class T>
+	void CountingSort(T* begin, size_t count, int byte) {
+		assert(sizeof(T) <= sizeof(1ULL));
 
-	assert(sizeof(*begin) <= sizeof(1ULL));
+		T* b = new T[count];
+		int c[256] = {0};
 
-	for (auto i = sizeof(*begin) - 1; i >= 0; --i) {
-		CountSort(begin, count, i);
+		for (size_t j = 0; j < count; ++j) {
+			c[_get_byte_by_index(begin[j], byte)]++;
+		}
+		for (int j = 1; j < 256; ++j) {
+			c[j] += c[j - 1];
+		}
+		for (int j = static_cast<int>(count) - 1; j >= 0; --j) {
+			b[--c[_get_byte_by_index(begin[j], byte)]] = begin[j];
+		}
+		std::memcpy(begin, b, sizeof(T) * count);
+
+		delete[] b;
 	}
+
+	/**
+	 * @brief Sorts the sequence by radix (LSD).
+	 * @param begin Pointer to the initial position in the sequence.
+	 * @param count Sequence length.
+	 */
+	template<class T>
+	void LsdSort(T* begin, const size_t count) {
+		assert(sizeof(T) <= sizeof(1ULL));
+
+		for (int i = 0; i < static_cast<int>(sizeof(*begin)); ++i) {
+			CountingSort(begin, count, i);
+		}
+	}
+
 }
 
 int main() {
@@ -51,7 +76,7 @@ int main() {
 		std::cin >> array[i];
 	}
 
-	LsdSort(array, n);
+	Sort::LsdSort(array, n);
 
 	for (size_t i = 0; i < n; ++i) {
 		std::cout << array[i] << ' ';
