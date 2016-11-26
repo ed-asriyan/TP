@@ -212,7 +212,15 @@ int main() {
 	int strength;
 	std::cin >> strength;
 
-	std::cout << CalcSolution(items, items + items_count, strength) << std::endl;
+	try {
+		std::cout << CalcSolution(items, items + items_count, strength) << std::endl;
+	} catch (Heap::EmptyHeapException& e) {
+		std::cerr << "Error: Pop for empty heap is called." << std::endl;
+	} catch (...) {
+		std::cerr << "Error: An error occurred while calculating solution." << std::endl;
+	}
+
+	delete[] items;
 
 	return 0;
 }
