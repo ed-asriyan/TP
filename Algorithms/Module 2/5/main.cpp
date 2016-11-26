@@ -23,7 +23,7 @@ void Merge(T* a, int a_len, T* b, int b_len, T* out) {
 	int i = 0;
 	int j = 0;
 
-	for (; i < a_len and j < b_len;) {
+	for (; i < a_len && j < b_len;) {
 		if (a[i] < b[j]) {
 			out[i + j] = a[i];
 			++i;
@@ -87,7 +87,7 @@ void Sort(std::vector<T>& data, int k) {
 
 	for (int i = k; i < size; i += k) {
 		MergeSort(&data[0] + offset, k);
-		Merge(&data[0], k, &data[0] + offset, std::min(k, size), &data[0]);
+		Merge(&data[0], k, &data[0] + offset, k, &data[0]);
 
 		offset += k;
 	}
