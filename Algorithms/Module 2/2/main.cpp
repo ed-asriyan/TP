@@ -85,19 +85,48 @@ namespace Heap {
 			 * @return Heap size.
 			 */
 			int get_size() const;
+
+		private:
+			void heapify(unsigned long i);
 	};
 
 	template<class T>
 	template<class ITERATOR>
 	BinaryHeap<T>::BinaryHeap(ITERATOR begin, ITERATOR end) {
+		data.reserve(std::distance(begin, end));
 		for (; begin != end; ++begin) {
-			Push(*begin);
+			data.push_back(*begin);
+		}
+
+		for (long i = static_cast<long>(data.size()) - 1; i >= 1; --i) {
+			heapify(i);
 		}
 	}
 
 	template<class T>
 	BinaryHeap<T>::BinaryHeap(const std::initializer_list<T>& init_list) :BinaryHeap(init_list.begin(),
 	                                                                                 init_list.end()) {}
+
+	template<class T>
+	void BinaryHeap<T>::heapify(unsigned long i) {
+		if (i >= data.size()) {
+			return;
+		}
+		unsigned long left = i << 1;
+		unsigned long right = left + 1;
+		unsigned long largest = i;
+
+		if (left < data.size() && data[left] > data[largest]) {
+			largest = left;
+		}
+		if (right < data.size() && data[right] > data[largest]) {
+			largest = right;
+		}
+		if (largest != i) {
+			std::swap(data[i], data[largest]);
+			heapify(largest);
+		}
+	}
 
 	template<class T>
 	const T& BinaryHeap<T>::Top() const {
