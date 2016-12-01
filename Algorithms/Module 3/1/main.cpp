@@ -52,6 +52,13 @@ namespace hash_table {
 			StringHashTable();
 
 			/**
+			 * @brief Determines whether an element is in the hash table.
+			 * @param value The value to locate in the hash table.
+			 * @return if value is found in the hash table; otherwise, false.
+			 */
+			bool contains(const std::string& value) const;
+
+			/**
 			* @brief Returns number of elements.
 			* @return Number of elements.
 			*/
@@ -90,6 +97,24 @@ namespace hash_table {
 	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&), int BufferSize>
 	int StringHashTable<HashFunc1, HashFunc2, BufferSize>::calcHash2(const std::string& string) const {
 		return HashFunc2(string) % BufferSize;
+	}
+
+	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&), int BufferSize>
+	bool StringHashTable<HashFunc1, HashFunc2, BufferSize>::contains(const std::string& value) const {
+		auto h1 = calcHash1(value);
+		auto h2 = calcHash2(value);
+
+		for (int i = 0; i < BufferSize; ++i) {
+			if (data[h1] != nullptr) {
+				if (!data[h1]->deleted && data[h1]->value == value) {
+					return true;
+				}
+			}
+
+			h1 = (h1 + h2) % BufferSize;
+		}
+
+		return false;
 	}
 
 }
