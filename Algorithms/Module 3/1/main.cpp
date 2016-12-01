@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <array>
+#include <cassert>
 #include <string>
 
 namespace hash_table {
@@ -30,10 +31,10 @@ namespace hash_table {
 		/**
 		 * @brief Always returns 0;
 		 * @param value Input value.
-		 * @return 0
+		 * @return 1.
 		 */
 		int BadHash(const std::string& value) {
-			return 0;
+			return 1;
 		}
 
 	}
@@ -52,6 +53,12 @@ namespace hash_table {
 			StringHashTable();
 
 			/**
+			 * @brief Adds value to the hash table.
+			 * @param value Value to add.
+			 */
+			void add(const std::string& value);
+
+			/**
 			 * @brief Determines whether an element is in the hash table.
 			 * @param value The value to locate in the hash table.
 			 * @return if value is found in the hash table; otherwise, false.
@@ -68,6 +75,8 @@ namespace hash_table {
 			struct Node {
 				std::string value;
 				bool deleted = false;
+
+				Node(const std::string& value);
 			};
 
 			int calcHash1(const std::string& string) const;
@@ -78,6 +87,11 @@ namespace hash_table {
 			size_t size = 0;
 
 	};
+
+	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&), int BufferSize>
+	StringHashTable<HashFunc1, HashFunc2, BufferSize>::Node::Node(const std::string& value) : value(value) {
+
+	}
 
 	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&), int BufferSize>
 	StringHashTable<HashFunc1, HashFunc2, BufferSize>::StringHashTable() {
@@ -97,6 +111,37 @@ namespace hash_table {
 	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&), int BufferSize>
 	int StringHashTable<HashFunc1, HashFunc2, BufferSize>::calcHash2(const std::string& string) const {
 		return HashFunc2(string) % BufferSize;
+	}
+
+	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&), int BufferSize>
+	void StringHashTable<HashFunc1, HashFunc2, BufferSize>::add(const std::string& value) {
+		if (size == BufferSize) throw exceptions::HashTableOverflowException();
+
+		auto h1 = calcHash1(value);
+		auto h2 = calcHash2(value);
+
+		for (int i = 0; i < BufferSize; ++i) {
+			auto& item = data[h1];
+
+			if (item == nullptr) {
+				item = new Node(value);
+
+				++size;
+				return;
+			} else if (item->deleted) {
+				item->value = value;
+				item->deleted = false;
+
+				++size;
+				return;
+			} else if (item->value == value) {
+				throw exceptions::KeyAlreadyExistsException();
+			}
+
+			h1 = (h1 + h2) % BufferSize;
+		}
+
+		assert(false);
 	}
 
 	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&), int BufferSize>
