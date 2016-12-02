@@ -1,0 +1,1 @@
+/usr/bin/c++    -static -Wall -std=gnu++11 -lm -g   CMakeFiles/BinaryTree.dir/main.cpp.o  -o BinaryTree 
