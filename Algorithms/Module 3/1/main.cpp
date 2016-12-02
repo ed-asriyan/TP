@@ -37,6 +37,31 @@ namespace hash_table {
 			return 1;
 		}
 
+		/**
+		 * @brief Calculates hash by hash algorithm 1.
+		 * @param value Input value.
+		 * @return Hash.
+		 */
+		int Hash1(const std::string& value) {
+			int hash = 0;
+			for (int i = static_cast<int>(value.size() - 1); i >= 0; i--) {
+				hash += (17 * hash + value[i]);
+			}
+			return hash;
+		}
+
+		/**
+		 * @brief Calculates hash by hash algorithm 2.
+		 * @param value Input value.
+		 * @return Hash.
+		 */
+		int Hash2(const std::string& value) {
+			int hash = 0;
+			for (int i = static_cast<int>(value.size() - 1); i >= 0; i--) {
+				hash += (19 * hash + value[i]);
+			}
+			return 2 * hash + 1;
+		}
 	}
 
 	/**
@@ -268,7 +293,7 @@ namespace hash_table {
 }
 
 int main() {
-	hash_table::StringHashTable<hash_table::hash::BadHash, hash_table::hash::BadHash> hash_table;
+	hash_table::StringHashTable<hash_table::hash::Hash1, hash_table::hash::Hash2> hash_table;
 
 	char command;
 	std::string str;
