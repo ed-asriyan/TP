@@ -24,11 +24,6 @@ namespace binarytree {
 	 */
 	template<class T>
 	class BinaryTreeNode {
-		private:
-			T value;
-			BinaryTreeNode* _left = nullptr;
-			BinaryTreeNode* _right = nullptr;
-
 		public:
 			/**
 			 * @brief Default constructor.
@@ -131,6 +126,11 @@ namespace binarytree {
 
 			BinaryTreeNode& operator=(const BinaryTreeNode&);
 
+		private:
+			T value;
+			BinaryTreeNode* _left = nullptr;
+			BinaryTreeNode* _right = nullptr;
+
 	};
 
 	template<class T>
@@ -157,7 +157,7 @@ namespace binarytree {
 	}
 
 	template<class T>
-	const T& BinaryTreeNode::get_value() const {
+	const T& BinaryTreeNode<T>::get_value() const {
 		return value;
 	}
 
@@ -225,14 +225,15 @@ namespace binarytree {
 
 	template<class T>
 	size_t BinaryTreeNode<T>::calcDepth() const {
-		size_t depth = 1;
+		size_t depth_left = 0;
+		size_t depth_right = 0;
 		if (has_right()) {
-			depth += _right->calcDepth();
+			depth_right = _right->calcDepth();
 		}
 		if (has_left()) {
-			depth += _left->calcDepth();
+			depth_left = _left->calcDepth();
 		}
-		return depth;
+		return std::max(depth_right, depth_left) + 1;
 	}
 
 	template<class T>
