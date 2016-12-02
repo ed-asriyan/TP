@@ -124,6 +124,12 @@ namespace binarytree {
 			 */
 			size_t calcDepth() const;
 
+			/**
+			 * @brief Calculates number of nodes in the tree.
+			 * @return Number of nodes in the tree.
+			 */
+			size_t calcSize() const;
+
 			BinaryTreeNode& operator=(const BinaryTreeNode&);
 
 		private:
@@ -237,6 +243,19 @@ namespace binarytree {
 	}
 
 	template<class T>
+	size_t BinaryTreeNode<T>::calcSize() const {
+		size_t depth_left = 0;
+		size_t depth_right = 0;
+		if (has_right()) {
+			depth_right = _right->calcDepth();
+		}
+		if (has_left()) {
+			depth_left = _left->calcDepth();
+		}
+		return depth_left + depth_right + 1;
+	}
+
+	template<class T>
 	BinaryTreeNode<T>& BinaryTreeNode<T>::operator=(const BinaryTreeNode& node) {
 		value = node.value;
 		if (node.has_left()) {
@@ -246,6 +265,142 @@ namespace binarytree {
 			set_right(node.left());
 		}
 		return *this;
+	}
+}
+
+namespace binarysearchtree {
+	using binarytree::BinaryTreeNode;
+
+	template<class T>
+	class BinarySearchTree {
+		public:
+			/**
+			 * @brief Default constructor.
+			 *
+			 * Root node is default.
+			 */
+			BinarySearchTree() = default;
+
+			/**
+			 * @brief Constructor.
+			 * @param root_value Root node.
+			 */
+			BinarySearchTree(const T& root_value);
+
+			/**
+			 * @brief Searchs node with required value.
+			 * @param value Value to search for.
+			 * @return Node.
+			 */
+			const BinaryTreeNode<T>& find(const T& value) const;
+
+			/**
+			 * @brief Adds new node with value to the binary search tree.
+			 * @param value Value to add.
+			 */
+			void add(const T& value);
+
+			/**
+			 * @brief Finds minimal element in the tree.
+			 * @return Minimal element in the tree.
+			 */
+			const BinaryTreeNode<T>& findMin() const;
+
+			/**
+			 * @brief Finds minimal element in the tree.
+			 * @return Minimal element in the tree.
+			 */
+			const BinaryTreeNode<T>& findMax() const;
+
+			/**
+			 * @brief Calculates tree depth.
+			 * @return Tree depth.
+			 */
+			size_t calcDepth() const;
+
+			/**
+			 * @brief Returns const reference to root node.
+			 * @return Const reference to root node.
+			 */
+			const BinaryTreeNode<T>& get_root() const;
+
+		private:
+			BinaryTreeNode<T> root;
+
+			static void AddToSubSearchTree(BinaryTreeNode<T>& root, const T& value);
+	};
+
+	template<class T>
+	BinarySearchTree<T>::BinarySearchTree(const T& root_value) : root(BinaryTreeNode<T>(root_value)) {}
+
+	template<class T>
+	const BinaryTreeNode<T>& BinarySearchTree<T>::get_root() const {
+		return root;
+	}
+
+	template<class T>
+	size_t BinarySearchTree<T>::calcDepth() const {
+		return root.calcDepth();
+	}
+
+	template<class T>
+	const BinaryTreeNode<T>& BinarySearchTree<T>::find(const T& value) const {
+		auto* node = &root;
+		while (node->get_value() != value) {
+			bool has_left = node->has_left();
+			bool has_right = node->has_right();
+			if (!has_left && !has_right) {
+				throw binarytree::exceptions::ChildNotExists();
+			}
+			if (value < node->get_value()) {
+				node = &node->left();
+			} else {
+				node = &node->right();
+			}
+		}
+		return *node;
+	}
+
+	template<class T>
+	void BinarySearchTree<T>::add(const T& value) {
+		AddToSubSearchTree(root, value);
+	}
+
+	template<class T>
+	const BinaryTreeNode<T>& BinarySearchTree<T>::findMin() const {
+		auto* node = &root;
+		while (node->has_left()) {
+			node = &node->left();
+		}
+		return *node;
+	}
+
+	template<class T>
+	const BinaryTreeNode<T>& BinarySearchTree<T>::findMax() const {
+		auto* node = &root;
+		while (node->has_right()) {
+			node = &node->right();
+		}
+		return *node;
+	}
+
+	template<class T>
+	void BinarySearchTree<T>::AddToSubSearchTree(BinaryTreeNode<T>& root, const T& value) {
+		auto& root_value = root.get_value();
+
+		if (value < root_value) {
+			if (root.has_left()) {
+				AddToSubSearchTree(root.left(), value);
+			} else {
+				root.set_left(BinaryTreeNode<T>(value));
+			}
+		} else {
+			if (root.has_right()) {
+				AddToSubSearchTree(root.right(), value);
+			} else {
+				root.set_right(BinaryTreeNode<T>(value));
+			}
+		}
 	}
 }
 
