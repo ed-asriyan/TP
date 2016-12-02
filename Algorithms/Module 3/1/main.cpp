@@ -44,13 +44,18 @@ namespace hash_table {
 	 * @tparam HashFunc1 Hash function int(const std::string&).
 	 * @tparam HashFunc2 Hash function int(const std::string&).
 	 */
-	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&), int BufferSize>
+	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&)>
 	class StringHashTable {
 		public:
 			/**
 			 * @brief Default constructor.
 			 */
 			StringHashTable();
+
+			/**
+			 * @brief Destructor.
+			 */
+			~StringHashTable();
 
 			/**
 			 * @brief Adds value to the hash table.
@@ -75,7 +80,7 @@ namespace hash_table {
 			* @brief Returns number of elements.
 			* @return Number of elements.
 			*/
-			size_t get_size() const;
+			int get_size() const;
 
 		private:
 			struct Node {
@@ -85,48 +90,74 @@ namespace hash_table {
 				Node(const std::string& value);
 			};
 
+			void rehash();
+			void rehash(int new_size);
+
 			int calcHash1(const std::string& string) const;
+			int calcHash1(const std::string& string, int size) const;
+
 			int calcHash2(const std::string& string) const;
+			int calcHash2(const std::string& string, int size) const;
 
-			std::array<Node*, BufferSize> data;
+			double alpha() const;
 
-			size_t size = 0;
+			Node** data = nullptr;
+			int buffer_size = 8;
+			int size = 0;
 
 	};
 
-	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&), int BufferSize>
-	StringHashTable<HashFunc1, HashFunc2, BufferSize>::Node::Node(const std::string& value) : value(value) {
+	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&)>
+	StringHashTable<HashFunc1, HashFunc2>::Node::Node(const std::string& value) : value(value) {
 
 	}
 
-	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&), int BufferSize>
-	StringHashTable<HashFunc1, HashFunc2, BufferSize>::StringHashTable() {
-		data.fill(nullptr);
+	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&)>
+	StringHashTable<HashFunc1, HashFunc2>::StringHashTable() {
+		rehash(8);
 	}
 
-	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&), int BufferSize>
-	size_t StringHashTable<HashFunc1, HashFunc2, BufferSize>::get_size() const {
+	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&)>
+	StringHashTable<HashFunc1, HashFunc2>::~StringHashTable() {
+		for (int i = 0; i < buffer_size; ++i) {
+			delete data[i];
+		}
+		delete[] data;
+	}
+
+	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&)>
+	int StringHashTable<HashFunc1, HashFunc2>::get_size() const {
 		return size;
 	}
 
-	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&), int BufferSize>
-	int StringHashTable<HashFunc1, HashFunc2, BufferSize>::calcHash1(const std::string& string) const {
-		return HashFunc1(string) % BufferSize;
+	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&)>
+	int StringHashTable<HashFunc1, HashFunc2>::calcHash1(const std::string& string) const {
+		return calcHash1(string, buffer_size);
 	}
 
-	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&), int BufferSize>
-	int StringHashTable<HashFunc1, HashFunc2, BufferSize>::calcHash2(const std::string& string) const {
-		return HashFunc2(string) % BufferSize;
+	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&)>
+	int StringHashTable<HashFunc1, HashFunc2>::calcHash1(const std::string& string, int size) const {
+		return HashFunc1(string) % size;
 	}
 
-	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&), int BufferSize>
-	void StringHashTable<HashFunc1, HashFunc2, BufferSize>::add(const std::string& value) {
-		if (size == BufferSize) throw exceptions::HashTableOverflowException();
+	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&)>
+	int StringHashTable<HashFunc1, HashFunc2>::calcHash2(const std::string& string) const {
+		return calcHash2(string, buffer_size);
+	}
+
+	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&)>
+	int StringHashTable<HashFunc1, HashFunc2>::calcHash2(const std::string& string, int size) const {
+		return HashFunc2(string) % size;
+	}
+
+	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&)>
+	void StringHashTable<HashFunc1, HashFunc2>::add(const std::string& value) {
+		if (alpha() >= 0.75) rehash();
 
 		auto h1 = calcHash1(value);
 		auto h2 = calcHash2(value);
 
-		for (int i = 0; i < BufferSize; ++i) {
+		for (int i = 0; i < buffer_size; ++i) {
 			auto& item = data[h1];
 
 			if (item == nullptr) {
@@ -144,36 +175,36 @@ namespace hash_table {
 				throw exceptions::KeyAlreadyExistsException();
 			}
 
-			h1 = (h1 + h2) % BufferSize;
+			h1 = (h1 + h2) % buffer_size;
 		}
 
 		assert(false);
 	}
 
-	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&), int BufferSize>
-	bool StringHashTable<HashFunc1, HashFunc2, BufferSize>::contains(const std::string& value) const {
+	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&)>
+	bool StringHashTable<HashFunc1, HashFunc2>::contains(const std::string& value) const {
 		auto h1 = calcHash1(value);
 		auto h2 = calcHash2(value);
 
-		for (int i = 0; i < BufferSize; ++i) {
+		for (int i = 0; i < buffer_size; ++i) {
 			if (data[h1] != nullptr) {
 				if (!data[h1]->deleted && data[h1]->value == value) {
 					return true;
 				}
 			}
 
-			h1 = (h1 + h2) % BufferSize;
+			h1 = (h1 + h2) % buffer_size;
 		}
 
 		return false;
 	}
 
-	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&), int BufferSize>
-	void StringHashTable<HashFunc1, HashFunc2, BufferSize>::remove(const std::string& value) {
+	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&)>
+	void StringHashTable<HashFunc1, HashFunc2>::remove(const std::string& value) {
 		auto h1 = calcHash1(value);
 		auto h2 = calcHash2(value);
 
-		for (int i = 0; i < BufferSize; ++i) {
+		for (int i = 0; i < buffer_size; ++i) {
 			auto& item = data[h1];
 
 			if (item != nullptr) {
@@ -188,15 +219,56 @@ namespace hash_table {
 				break;
 			}
 
-			h1 = (h1 + h2) % BufferSize;
+			h1 = (h1 + h2) % buffer_size;
 		}
 
 		throw exceptions::KeyNotExistsException();
 	}
+
+	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&)>
+	double StringHashTable<HashFunc1, HashFunc2>::alpha() const {
+		return static_cast<double>(size) / buffer_size;
+	}
+
+	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&)>
+	void StringHashTable<HashFunc1, HashFunc2>::rehash() {
+		rehash(buffer_size << 1);
+	}
+
+	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&)>
+	void StringHashTable<HashFunc1, HashFunc2>::rehash(int new_size) {
+		Node** new_data = new Node* [new_size];
+
+		for (int i = 0; i < new_size; ++i) {
+			new_data[i] = nullptr;
+		}
+
+		if (data != nullptr) {
+			for (int i = 0; i < buffer_size; ++i) {
+				auto& item = data[i];
+
+				if (item != nullptr && !item->deleted) {
+					auto h1 = calcHash1(item->value, new_size);
+					auto h2 = calcHash2(item->value, new_size);
+
+					for (int j = 0; j < new_size && new_data[j] != nullptr; ++j) {
+						h1 += (h1 + h2) % new_size;
+					}
+
+					new_data[h1] = data[i];
+				}
+			}
+
+			delete[] data;
+		}
+
+		buffer_size = new_size;
+		data = new_data;
+	}
 }
 
 int main() {
-	hash_table::StringHashTable<hash_table::hash::BadHash, hash_table::hash::BadHash, 8> hash_table;
+	hash_table::StringHashTable<hash_table::hash::BadHash, hash_table::hash::BadHash> hash_table;
 
 	char command;
 	std::string str;
