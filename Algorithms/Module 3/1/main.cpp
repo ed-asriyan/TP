@@ -196,6 +196,27 @@ namespace hash_table {
 }
 
 int main() {
-	std::cout << "Hello, World!" << std::endl;
+	hash_table::StringHashTable<hash_table::hash::BadHash, hash_table::hash::BadHash, 8> hash_table;
+
+	char command;
+	std::string str;
+	while (std::cin >> command >> str) {
+		try {
+			switch (command) {
+				case '+': hash_table.add(str);
+					break;
+				case '-': hash_table.remove(str);
+					break;
+				case '?': if (!hash_table.contains(str)) throw 0;
+					break;
+				default: break;
+			}
+
+			std::cout << "OK" << std::endl;
+		} catch (...) {
+			std::cout << "FAIL" << std::endl;
+		}
+	}
+
 	return 0;
 }
