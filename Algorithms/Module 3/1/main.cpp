@@ -118,6 +118,9 @@ namespace hash_table {
 			void rehash();
 			void rehash(int new_size);
 
+			Node*& findToInsert(const std::string& value);
+			Node* const& findToInsert(const std::string& value) const;
+
 			int calcHash1(const std::string& string) const;
 			int calcHash1(const std::string& string, int size) const;
 
@@ -179,75 +182,35 @@ namespace hash_table {
 	void StringHashTable<HashFunc1, HashFunc2>::add(const std::string& value) {
 		if (alpha() >= 0.75) rehash();
 
-		auto h1 = calcHash1(value);
-		auto h2 = calcHash2(value);
-
-		for (int i = 0; i < buffer_size; ++i) {
-			auto& item = data[h1];
-
-			if (item == nullptr) {
-				item = new Node(value);
-
-				++size;
-				return;
-			} else if (item->deleted) {
-				item->value = value;
-				item->deleted = false;
-
-				++size;
-				return;
-			} else if (item->value == value) {
-				throw exceptions::KeyAlreadyExistsException();
-			}
-
-			h1 = (h1 + h2) % buffer_size;
+		auto& item = findToInsert(value);
+		if (item == nullptr) {
+			item = new Node(value);
+		} else if (item->deleted) {
+			item->value = value;
+			item->deleted = false;
+		} else {
+			throw exceptions::KeyAlreadyExistsException();
 		}
 
-		assert(false);
+		++size;
 	}
 
 	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&)>
 	bool StringHashTable<HashFunc1, HashFunc2>::contains(const std::string& value) const {
-		auto h1 = calcHash1(value);
-		auto h2 = calcHash2(value);
-
-		for (int i = 0; i < buffer_size; ++i) {
-			if (data[h1] != nullptr) {
-				if (!data[h1]->deleted && data[h1]->value == value) {
-					return true;
-				}
-			}
-
-			h1 = (h1 + h2) % buffer_size;
-		}
-
-		return false;
+		auto& item = findToInsert(value);
+		return item != nullptr && !item->deleted;
 	}
 
 	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&)>
 	void StringHashTable<HashFunc1, HashFunc2>::remove(const std::string& value) {
-		auto h1 = calcHash1(value);
-		auto h2 = calcHash2(value);
+		auto& item = findToInsert(value);
 
-		for (int i = 0; i < buffer_size; ++i) {
-			auto& item = data[h1];
-
-			if (item != nullptr) {
-				if (!item->deleted) {
-					if (item->value == value) {
-						item->deleted = true;
-						--size;
-						return;
-					}
-				}
-			} else {
-				break;
-			}
-
-			h1 = (h1 + h2) % buffer_size;
+		if (item == nullptr || item->deleted) {
+			throw exceptions::KeyNotExistsException();
+		} else {
+			item->deleted = true;
+			--size;
 		}
-
-		throw exceptions::KeyNotExistsException();
 	}
 
 	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&)>
@@ -262,34 +225,59 @@ namespace hash_table {
 
 	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&)>
 	void StringHashTable<HashFunc1, HashFunc2>::rehash(int new_size) {
-		Node** new_data = new Node* [new_size];
-
-		for (int i = 0; i < new_size; ++i) {
-			new_data[i] = nullptr;
-		}
-
-		if (data != nullptr) {
-			for (int i = 0; i < buffer_size; ++i) {
-				auto& item = data[i];
-
-				if (item != nullptr && !item->deleted) {
-					auto h1 = calcHash1(item->value, new_size);
-					auto h2 = calcHash2(item->value, new_size);
-
-					for (int j = 0; j < new_size && new_data[j] != nullptr; ++j) {
-						h1 += (h1 + h2) % new_size;
-					}
-
-					new_data[h1] = data[i];
-				}
-			}
-
-			delete[] data;
-		}
+		auto old_data = data;
+		auto old_buffer_size = buffer_size;
 
 		buffer_size = new_size;
-		data = new_data;
+		data = new Node* [new_size];
+		for (int i = 0; i < buffer_size; ++i) {
+			data[i] = nullptr;
+		}
+
+		if (old_data != nullptr) {
+			for (int i = 0; i < old_buffer_size; ++i) {
+				const auto& item = old_data[i];
+				if (item != nullptr) {
+					if (!item->deleted) {
+						findToInsert(item->value) = item;
+					}
+				}
+			}
+			delete[] old_data;
+		}
 	}
+
+	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&)>
+	typename StringHashTable<HashFunc1, HashFunc2>::Node*& StringHashTable<HashFunc1, HashFunc2>::findToInsert(const std::string& value) {
+		auto h1 = calcHash1(value);
+		auto h2 = calcHash2(value);
+
+		int i = 0;
+		while ((data[h1] != nullptr && !data[h1]->deleted && data[h1]->value != value) && i < buffer_size) {
+			h1 = (h1 + h2) % buffer_size;
+			++i;
+		}
+
+		assert(i != buffer_size);
+		return data[h1];
+	}
+
+	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&)>
+	typename StringHashTable<HashFunc1, HashFunc2>::Node* const& StringHashTable<HashFunc1, HashFunc2>::findToInsert(
+		const std::string& value) const {
+		auto h1 = calcHash1(value);
+		auto h2 = calcHash2(value);
+
+		int i = 0;
+		while ((data[h1] != nullptr && !data[h1]->deleted && data[h1]->value != value) && i < buffer_size) {
+			h1 = (h1 + h2) % buffer_size;
+			++i;
+		}
+
+		assert(i != buffer_size);
+		return data[h1];
+	}
+
 }
 
 int main() {
@@ -310,6 +298,8 @@ int main() {
 			}
 
 			std::cout << "OK" << std::endl;
+		} catch (hash_table::exceptions::HashTableOverflowException& e) {
+			assert(false);
 		} catch (...) {
 			std::cout << "FAIL" << std::endl;
 		}
