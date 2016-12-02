@@ -59,6 +59,12 @@ namespace hash_table {
 			void add(const std::string& value);
 
 			/**
+			 * @brief Removes value from the hash table.
+			 * @param value Value to remove.
+			 */
+			void remove(const std::string& value);
+
+			/**
 			 * @brief Determines whether an element is in the hash table.
 			 * @param value The value to locate in the hash table.
 			 * @return if value is found in the hash table; otherwise, false.
@@ -162,6 +168,31 @@ namespace hash_table {
 		return false;
 	}
 
+	template<int HashFunc1(const std::string&), int HashFunc2(const std::string&), int BufferSize>
+	void StringHashTable<HashFunc1, HashFunc2, BufferSize>::remove(const std::string& value) {
+		auto h1 = calcHash1(value);
+		auto h2 = calcHash2(value);
+
+		for (int i = 0; i < BufferSize; ++i) {
+			auto& item = data[h1];
+
+			if (item != nullptr) {
+				if (!item->deleted) {
+					if (item->value == value) {
+						item->deleted = true;
+						--size;
+						return;
+					}
+				}
+			} else {
+				break;
+			}
+
+			h1 = (h1 + h2) % BufferSize;
+		}
+
+		throw exceptions::KeyNotExistsException();
+	}
 }
 
 int main() {
