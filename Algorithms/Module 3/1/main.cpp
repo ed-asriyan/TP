@@ -185,6 +185,9 @@ namespace hash_table {
 
 	template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
 	void StringHashTable<T, HashFunc1, HashFunc2>::rehash(int new_size) {
+		if (new_size <= buffer_size) {
+			return;
+		}
 		auto old_data = data;
 		auto old_buffer_size = buffer_size;
 
