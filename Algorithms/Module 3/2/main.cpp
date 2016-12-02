@@ -5,7 +5,7 @@
  */
 
 #include <iostream>
-#include <memory>
+#include <functional>
 
 namespace binarytree {
 	namespace exceptions {
@@ -129,6 +129,12 @@ namespace binarytree {
 			 * @return Number of nodes in the tree.
 			 */
 			size_t calcSize() const;
+
+			/**
+			 * @brief Traverses from up to down.
+			 * @param func Function which is call on each step.
+			 */
+			void traverseDfsUpDown(std::function<void(const BinaryTreeNode<T>&)> func) const;
 
 			BinaryTreeNode& operator=(const BinaryTreeNode&);
 
@@ -265,6 +271,17 @@ namespace binarytree {
 			set_right(node.left());
 		}
 		return *this;
+	}
+
+	template<class T>
+	void BinaryTreeNode<T>::traverseDfsUpDown(std::function<void(const BinaryTreeNode&)> func) const {
+		func(*this);
+		if (has_left()) {
+			left().traverseDfsUpDown(func);
+		}
+		if (has_right()) {
+			right().traverseDfsUpDown(func);
+		}
 	}
 }
 
@@ -405,6 +422,24 @@ namespace binarysearchtree {
 }
 
 int main() {
-	std::cout << "Hello, World!" << std::endl;
+	using namespace binarysearchtree;
+
+	size_t n;
+	std::cin >> n;
+
+	int item;
+	std::cin >> item;
+	BinarySearchTree<int> tree(item);
+
+	for (size_t i = 1; i < n; ++i) {
+		std::cin >> item;
+		tree.add(item);
+	}
+
+	tree.get_root().traverseDfsUpDown([](const BinaryTreeNode<int>& node) {
+		std::cout << node.get_value() << ' ';
+	});
+	std::cout << std::endl;
+
 	return 0;
 }
