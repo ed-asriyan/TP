@@ -200,9 +200,10 @@ namespace hash_table {
 				auto& item = old_data[i];
 				if (item != NULL_NODE) {
 					if (!item->deleted) {
-						add(item->value);
+						findToInsert(item->value) = item;
+					} else {
+						delete item;
 					}
-					delete item;
 				}
 			}
 			delete[] old_data;
@@ -213,7 +214,7 @@ namespace hash_table {
 	typename StringHashTable<T, HashFunc1, HashFunc2>::Node*& StringHashTable<T, HashFunc1, HashFunc2>::findToInsert(
 		const T& value) {
 		if (!buffer_size) {
-			rehash(8);
+			rehash(1);
 		} else if (alpha() >= 0.75) {
 			rehash();
 		}
@@ -229,7 +230,7 @@ namespace hash_table {
 				return node;
 			}
 			if (node->value == value) throw exceptions::KeyAlreadyExistsException();
-			h1 = (h1 + h2) % buffer_size;
+			h1 = (h1 + h2 + 1) % buffer_size;
 			++i;
 		}
 
@@ -250,10 +251,10 @@ namespace hash_table {
 		while (i < buffer_size) {
 			Node*& node = data[h1];
 			if (node == NULL_NODE) break;
-			if (node->value == value && !node->deleted) {
+			if (!node->deleted && node->value == value) {
 				return node;
 			}
-			h1 = (h1 + h2) % buffer_size;
+			h1 = (h1 + h2 + 1) % buffer_size;
 			++i;
 		}
 
@@ -279,8 +280,8 @@ namespace hash {
 	 */
 	int StringHash1(const std::string& value) {
 		int hash = 0;
-		for (int i = static_cast<int>(value.size() - 1); i >= 0; i--) {
-			hash += (17 * hash + value[i]);
+		for (auto& c: value) {
+			hash += 17 * hash + c;
 		}
 		return hash;
 	}
@@ -292,8 +293,8 @@ namespace hash {
 	 */
 	int StringHash2(const std::string& value) {
 		int hash = 0;
-		for (int i = static_cast<int>(value.size() - 1); i >= 0; i--) {
-			hash += (19 * hash + value[i]);
+		for (auto& c: value) {
+			hash += 19 * hash + c;
 		}
 		return 2 * hash + 1;
 	}
@@ -340,6 +341,5 @@ void Run() {
 
 int main() {
 	Run<std::string, hash::StringHash1, hash::StringHash2>();
-
 	return 0;
 }
