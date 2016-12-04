@@ -342,27 +342,26 @@ namespace binarysearchtree {
 			const BinaryTreeNode<T>& get_root() const;
 
 		private:
-			BinaryTreeNode<T> root;
+			BinaryTreeNode<T>* root;
 
-			static void AddToSubSearchTree(BinaryTreeNode<T>& root, const T& value);
 	};
 
 	template<class T>
-	BinarySearchTree<T>::BinarySearchTree(const T& root_value) : root(BinaryTreeNode<T>(root_value)) {}
+	BinarySearchTree<T>::BinarySearchTree(const T& root_value) : root(new BinaryTreeNode<T>(root_value)) {}
 
 	template<class T>
 	const BinaryTreeNode<T>& BinarySearchTree<T>::get_root() const {
-		return root;
+		return *root;
 	}
 
 	template<class T>
 	size_t BinarySearchTree<T>::calcDepth() const {
-		return root.calcDepth();
+		return root->calcDepth();
 	}
 
 	template<class T>
 	const BinaryTreeNode<T>& BinarySearchTree<T>::find(const T& value) const {
-		auto* node = &root;
+		auto* node = root;
 		while (node->get_value() != value) {
 			bool has_left = node->has_left();
 			bool has_right = node->has_right();
@@ -380,12 +379,31 @@ namespace binarysearchtree {
 
 	template<class T>
 	void BinarySearchTree<T>::add(const T& value) {
-		AddToSubSearchTree(root, value);
+		BinaryTreeNode<T>* current = root;
+
+		while (true) {
+			if (value < current->get_value()) {
+				if (current->has_left()) {
+					current = &current->left();
+				} else {
+					current->set_left(BinaryTreeNode<T>(value));
+					break;
+				}
+			} else {
+				if (current->has_right()) {
+					current = &current->right();
+				} else {
+					current->set_right(BinaryTreeNode<T>(value));
+					break;
+				}
+			}
+		}
+
 	}
 
 	template<class T>
 	const BinaryTreeNode<T>& BinarySearchTree<T>::findMin() const {
-		auto* node = &root;
+		auto* node = root;
 		while (node->has_left()) {
 			node = &node->left();
 		}
@@ -394,31 +412,13 @@ namespace binarysearchtree {
 
 	template<class T>
 	const BinaryTreeNode<T>& BinarySearchTree<T>::findMax() const {
-		auto* node = &root;
+		auto* node = root;
 		while (node->has_right()) {
 			node = &node->right();
 		}
 		return *node;
 	}
 
-	template<class T>
-	void BinarySearchTree<T>::AddToSubSearchTree(BinaryTreeNode<T>& root, const T& value) {
-		auto& root_value = root.get_value();
-
-		if (value < root_value) {
-			if (root.has_left()) {
-				AddToSubSearchTree(root.left(), value);
-			} else {
-				root.set_left(BinaryTreeNode<T>(value));
-			}
-		} else {
-			if (root.has_right()) {
-				AddToSubSearchTree(root.right(), value);
-			} else {
-				root.set_right(BinaryTreeNode<T>(value));
-			}
-		}
-	}
 }
 
 int main() {
