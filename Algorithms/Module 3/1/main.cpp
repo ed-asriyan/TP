@@ -33,17 +33,17 @@ namespace hash_table {
 	 * @tparam HashFunc2 Hash function int(const T&).
 	 */
 	template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
-	class StringHashTable {
+	class HashTable {
 		public:
 			/**
 			 * @brief Default constructor.
 			 */
-			StringHashTable() = default;
+			HashTable() = default;
 
 			/**
 			 * @brief Destructor.
 			 */
-			~StringHashTable();
+			~HashTable();
 
 			/**
 			 * @brief Adds value to the hash table.
@@ -90,7 +90,7 @@ namespace hash_table {
 			int calcHash2(const T& string) const;
 			int calcHash2(const T& string, int size) const;
 
-			double alpha() const;
+			double buffer_fill_factor() const;
 
 			Node** data = nullptr;
 			int buffer_size = 0;
@@ -101,12 +101,12 @@ namespace hash_table {
 	};
 
 	template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
-	StringHashTable<T, HashFunc1, HashFunc2>::Node::Node(const T& value) : value(value) {
+	HashTable<T, HashFunc1, HashFunc2>::Node::Node(const T& value) : value(value) {
 
 	}
 
 	template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
-	StringHashTable<T, HashFunc1, HashFunc2>::~StringHashTable() {
+	HashTable<T, HashFunc1, HashFunc2>::~HashTable() {
 		for (int i = 0; i < buffer_size; ++i) {
 			delete data[i];
 		}
@@ -114,33 +114,33 @@ namespace hash_table {
 	}
 
 	template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
-	int StringHashTable<T, HashFunc1, HashFunc2>::get_size() const {
+	int HashTable<T, HashFunc1, HashFunc2>::get_size() const {
 		return size;
 	}
 
 	template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
-	int StringHashTable<T, HashFunc1, HashFunc2>::calcHash1(const T& string) const {
+	int HashTable<T, HashFunc1, HashFunc2>::calcHash1(const T& string) const {
 		return calcHash1(string, buffer_size);
 	}
 
 	template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
-	int StringHashTable<T, HashFunc1, HashFunc2>::calcHash1(const T& string, int size) const {
+	int HashTable<T, HashFunc1, HashFunc2>::calcHash1(const T& string, int size) const {
 		return (std::abs(HashFunc1(string)) + 1) % size;
 	}
 
 	template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
-	int StringHashTable<T, HashFunc1, HashFunc2>::calcHash2(const T& string) const {
+	int HashTable<T, HashFunc1, HashFunc2>::calcHash2(const T& string) const {
 		return calcHash2(string, buffer_size);
 	}
 
 	template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
-	int StringHashTable<T, HashFunc1, HashFunc2>::calcHash2(const T& string, int size) const {
+	int HashTable<T, HashFunc1, HashFunc2>::calcHash2(const T& string, int size) const {
 		return (std::abs(HashFunc2(string)) + 1) % size;
 	}
 
 	template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
-	void StringHashTable<T, HashFunc1, HashFunc2>::add(const T& value) {
-		if (alpha() >= 0.75) rehash();
+	void HashTable<T, HashFunc1, HashFunc2>::add(const T& value) {
+		if (buffer_fill_factor() >= 0.75) rehash();
 
 		auto& item = findToInsert(value);
 		if (item == NULL_NODE) {
@@ -154,7 +154,7 @@ namespace hash_table {
 	}
 
 	template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
-	bool StringHashTable<T, HashFunc1, HashFunc2>::contains(const T& value) const {
+	bool HashTable<T, HashFunc1, HashFunc2>::contains(const T& value) const {
 		try {
 			find(value);
 		} catch (exceptions::KeyNotExistsException&) {
@@ -164,7 +164,7 @@ namespace hash_table {
 	}
 
 	template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
-	void StringHashTable<T, HashFunc1, HashFunc2>::remove(const T& value) {
+	void HashTable<T, HashFunc1, HashFunc2>::remove(const T& value) {
 		auto& item = find(value);
 		item->deleted = true;
 		--size;
@@ -172,17 +172,21 @@ namespace hash_table {
 	}
 
 	template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
-	double StringHashTable<T, HashFunc1, HashFunc2>::alpha() const {
+	double HashTable<T, HashFunc1, HashFunc2>::buffer_fill_factor() const {
+		if (!buffer_size) return 1;
 		return static_cast<double>(size) / buffer_size;
 	}
 
 	template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
-	void StringHashTable<T, HashFunc1, HashFunc2>::rehash() {
+	void HashTable<T, HashFunc1, HashFunc2>::rehash() {
+		if (!buffer_size) {
+			buffer_size = 1;
+		}
 		rehash(buffer_size << 1);
 	}
 
 	template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
-	void StringHashTable<T, HashFunc1, HashFunc2>::rehash(int new_size) {
+	void HashTable<T, HashFunc1, HashFunc2>::rehash(int new_size) {
 		if (new_size <= buffer_size) {
 			return;
 		}
@@ -198,10 +202,14 @@ namespace hash_table {
 		if (old_data != nullptr) {
 			for (int i = 0; i < old_buffer_size; ++i) {
 				auto& item = old_data[i];
+
+				// if node has been accessed
 				if (item != NULL_NODE) {
+					// if node is not deleted
+					// copy to the new buffer
 					if (!item->deleted) {
 						findToInsert(item->value) = item;
-					} else {
+					} else { // if not, remove it
 						delete item;
 					}
 				}
@@ -211,11 +219,9 @@ namespace hash_table {
 	}
 
 	template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
-	typename StringHashTable<T, HashFunc1, HashFunc2>::Node*& StringHashTable<T, HashFunc1, HashFunc2>::findToInsert(
+	typename HashTable<T, HashFunc1, HashFunc2>::Node*& HashTable<T, HashFunc1, HashFunc2>::findToInsert(
 		const T& value) {
-		if (!buffer_size) {
-			rehash(1);
-		} else if (alpha() >= 0.75) {
+		if (buffer_fill_factor() >= 0.75) {
 			rehash();
 		}
 		assert(data != nullptr);
@@ -224,21 +230,41 @@ namespace hash_table {
 		auto h2 = calcHash2(value);
 
 		int i = 0;
+		int result_index = -1;
 		while (i < buffer_size) {
 			Node*& node = data[h1];
-			if (node == NULL_NODE || node->deleted) {
-				return node;
+
+			// if current node has been never accessed
+			if (node == NULL_NODE) {
+				// if it is first node that is valid for value
+				if (result_index < 0) {
+					result_index = h1;
+				}
+
+				// all forward nodes are invalid for value
+				break;
+			} else { // if current node has been already accessed
+				// is node exists, but was deleted
+				if (node->deleted) {
+					// if it is first node that is valid for value
+					if (result_index < 0) {
+						result_index = h1;
+					}
+				} else if (node->value == value) { // if node has not been deleted and node's value is equal to value
+					throw exceptions::KeyAlreadyExistsException();
+				}
 			}
-			if (node->value == value) throw exceptions::KeyAlreadyExistsException();
+
 			h1 = (h1 + h2 + 1) % buffer_size;
 			++i;
 		}
 
-		assert(false);
+		assert(result_index >= 0);
+		return data[result_index];
 	}
 
 	template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
-	typename StringHashTable<T, HashFunc1, HashFunc2>::Node* const& StringHashTable<T, HashFunc1, HashFunc2>::find(
+	typename HashTable<T, HashFunc1, HashFunc2>::Node* const& HashTable<T, HashFunc1, HashFunc2>::find(
 		const T& value) const {
 		if (data == nullptr) {
 			throw exceptions::KeyNotExistsException();
@@ -250,16 +276,26 @@ namespace hash_table {
 		int i = 0;
 		while (i < buffer_size) {
 			Node*& node = data[h1];
-			if (node == NULL_NODE) break;
+
+			// if current node has been never accessed
+			// all forward nodes are invalid for value
+			if (node == NULL_NODE) {
+				break;
+			}
+
+			// is node exists, has been never deleted and node's value is equal to value
 			if (!node->deleted && node->value == value) {
 				return node;
 			}
+
 			h1 = (h1 + h2 + 1) % buffer_size;
 			++i;
 		}
 
+		// after iteration over the buffer the value was not found
 		throw exceptions::KeyNotExistsException();
 	}
+
 }
 
 namespace hash {
@@ -307,7 +343,7 @@ namespace hash {
  */
 template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
 void Run(std::istream& in, std::ostream& out) {
-	hash_table::StringHashTable<T, HashFunc1, HashFunc2> hash_table;
+	hash_table::HashTable<T, HashFunc1, HashFunc2> hash_table;
 
 	char command;
 	T value;
