@@ -134,7 +134,7 @@ namespace binarytree {
 			 * @brief Traverses from up to down.
 			 * @param func Function which is call on each step.
 			 */
-			void traverseDfsUpDown(std::function<void(const BinaryTreeNode<T>&)> func) const;
+			void traverseDfsPreOrder(std::function<void(const BinaryTreeNode<T>&)> func) const;
 
 			BinaryTreeNode& operator=(const BinaryTreeNode&);
 
@@ -274,13 +274,13 @@ namespace binarytree {
 	}
 
 	template<class T>
-	void BinaryTreeNode<T>::traverseDfsUpDown(std::function<void(const BinaryTreeNode&)> func) const {
+	void BinaryTreeNode<T>::traverseDfsPreOrder(std::function<void(const BinaryTreeNode&)> func) const {
 		func(*this);
 		if (has_left()) {
-			left().traverseDfsUpDown(func);
+			left().traverseDfsPreOrder(func);
 		}
 		if (has_right()) {
-			right().traverseDfsUpDown(func);
+			right().traverseDfsPreOrder(func);
 		}
 	}
 }
@@ -436,7 +436,7 @@ int main() {
 		tree.add(item);
 	}
 
-	tree.get_root().traverseDfsUpDown([](const BinaryTreeNode<int>& node) {
+	tree.get_root().traverseDfsPreOrder([](const BinaryTreeNode<int>& node) {
 		std::cout << node.get_value() << ' ';
 	});
 	std::cout << std::endl;
