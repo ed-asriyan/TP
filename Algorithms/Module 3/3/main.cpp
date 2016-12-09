@@ -44,6 +44,11 @@ namespace binarytree {
 			BinaryTreeNode(const BinaryTreeNode&);
 
 			/**
+			 * @brief Move constructor.
+			 */
+			BinaryTreeNode(BinaryTreeNode&&);
+
+			/**
 			 * @brief Destructor.
 			 */
 			~BinaryTreeNode();
@@ -152,6 +157,10 @@ namespace binarytree {
 	BinaryTreeNode<T>::BinaryTreeNode(const BinaryTreeNode& node) {
 		*this = node;
 	}
+
+	template<class T>
+	BinaryTreeNode<T>::BinaryTreeNode(BinaryTreeNode&& node)
+		: value(std::move(node.value)), _left(node._left), _right(node._right) {}
 
 	template<class T>
 	BinaryTreeNode<T>::~BinaryTreeNode() {
