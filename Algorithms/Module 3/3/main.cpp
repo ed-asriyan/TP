@@ -462,21 +462,138 @@ namespace binarytree {
 
 }
 
+namespace binarytree {
+	template<class X, class Y>
+	class Treap {
+		public:
+			/**
+			 * @brief Default constructor;
+			 */
+			Treap() = default;
+
+			/**
+			 * @brief Destructor.
+			 */
+			~Treap();
+
+			/**
+			 * @brief Adds new node with value to the treep.
+			 * @param value Value to add.
+			 */
+			void add(const X& key, const Y& priority);
+
+			/**
+			 * @brief Calculates treap depth.
+			 * @return Treap depth.
+			 */
+			size_t calcDepth() const;
+
+		private:
+			struct Node {
+				X key;
+				Y priority;
+
+				Node* left = nullptr;
+				Node* right = nullptr;
+
+				Node(X key, Y priority);
+				~Node();
+			};
+
+			Node* merge(Node* left, Node* right);
+
+			void split(Node* current_node, const X& key, Node*& left, Node*& right);
+
+			size_t depth(const Node* node) const;
+
+			Node* root = nullptr;
+	};
+
+	template<class X, class Y>
+	Treap<X, Y>::Node::Node(X key, Y priority) : key(key), priority(priority) {}
+
+	template<class X, class Y>
+	Treap<X, Y>::Node::~Node() {
+		delete left;
+		delete right;
+	}
+
+	template<class X, class Y>
+	typename Treap<X, Y>::Node* Treap<X, Y>::merge(Treap<X, Y>::Node* left, Treap<X, Y>::Node* right) {
+		if (left == nullptr || right == nullptr) {
+			return left == nullptr ? right : left;
+		}
+
+		if (left->priority > right->priority) {
+			left->right = merge(left->right, right);
+			return left;
+		} else {
+			right->left = merge(left, right->left);
+			return right;
+		}
+	}
+
+	template<class X, class Y>
+	void Treap<X, Y>::split(Treap<X, Y>::Node* current_node,
+	                        const X& key,
+	                        Node*& left,
+	                        Node*& right) {
+		if (current_node == nullptr) {
+			left = nullptr;
+			right = nullptr;
+		} else if (current_node->key <= key) {
+			split(current_node->right, key, current_node->right, right);
+			left = current_node;
+		} else {
+			split(current_node->left, key, left, current_node->left);
+			right = current_node;
+		}
+	}
+
+	template<class X, class Y>
+	Treap<X, Y>::~Treap() {
+		delete root;
+	}
+
+	template<class X, class Y>
+	void Treap<X, Y>::add(const X& key, const Y& priority) {
+		auto* node = new Node(key, priority);
+		Node* split_left = nullptr;
+		Node* split_right = nullptr;
+		split(root, key, split_left, split_right);
+		root = merge(merge(split_left, node), split_right);
+	}
+
+	template<class X, class Y>
+	size_t Treap<X, Y>::calcDepth() const {
+		return depth(root);
+	}
+
+	template<class X, class Y>
+	size_t Treap<X, Y>::depth(const Treap<X, Y>::Node* node) const {
+		if (node == nullptr) {
+			return 0;
+		} else {
+			return std::max(depth(node->left), depth(node->right)) + 1;
+		}
+	}
+}
+
 int main() {
 	size_t n;
 	std::cin >> n;
 
 	binarytree::BinarySearchTree<int> tree;
-	binarytree::BinarySearchTree<int> treap;
+	binarytree::Treap<int, int> treap;
 
 	for (size_t i = 0; i < n; ++i) {
 		int key, priority;
 		std::cin >> key >> priority;
 
 		tree.add(key);
-		treap.add(key);
+		treap.add(key, priority);
 	}
 
-	std::cout << (tree.calcDepth() - treap.calcDepth());
+	std::cout << (static_cast<int>(tree.calcDepth()) - static_cast<int>(treap.calcDepth())) << std::endl;
 	return 0;
 }
