@@ -350,13 +350,17 @@ void Run(std::istream& in, std::ostream& out) {
 	while (in >> command >> value) {
 		try {
 			switch (command) {
-				case '+': hash_table.add(value);
+				case '+':
+					hash_table.add(value);
 					break;
-				case '-': hash_table.remove(value);
+				case '-':
+					hash_table.remove(value);
 					break;
-				case '?': if (!hash_table.contains(value)) throw 0;
+				case '?':
+					if (!hash_table.contains(value)) throw 0;
 					break;
-				default: break;
+				default:
+					break;
 			}
 			out << "OK" << std::endl;
 		} catch (hash_table::exceptions::HashTableOverflowException& e) {
