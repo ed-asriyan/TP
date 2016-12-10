@@ -179,10 +179,7 @@ namespace hash_table {
 
 	template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
 	void HashTable<T, HashFunc1, HashFunc2>::rehash() {
-		if (!buffer_size) {
-			buffer_size = 1;
-		}
-		rehash(buffer_size << 1);
+		rehash(buffer_size ? buffer_size << 1 : 8);
 	}
 
 	template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
