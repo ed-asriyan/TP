@@ -142,6 +142,10 @@ namespace binarytree {
 
 	template<class T>
 	typename AvlTree<T>::Node* AvlTree<T>::balance(Node* p) {
+		if (p == nullptr) {
+			return nullptr;
+		}
+
 		fixHeight(p);
 		if (calcBalanceFactor(p) == 2) {
 			if (calcBalanceFactor(p->right) < 0) {
@@ -239,10 +243,10 @@ namespace binarytree {
 			while (k_index != k) {
 				if (k > k_index) {
 					p = p->right;
-					k_index = k_index + calcSize(p->left) + 1;
+					k_index += calcSize(p->left) + 1;
 				} else {
 					p = p->left;
-					k_index = k_index - calcSize(p->right) - 1;
+					k_index -= calcSize(p->right) + 1;
 				}
 			}
 
