@@ -125,7 +125,7 @@ namespace hash_table {
 
 	template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
 	int HashTable<T, HashFunc1, HashFunc2>::calcHash1(const T& string, int size) const {
-		return (std::abs(HashFunc1(string)) + 1) % size;
+		return std::abs(HashFunc1(string)) % size;
 	}
 
 	template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
@@ -135,7 +135,7 @@ namespace hash_table {
 
 	template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
 	int HashTable<T, HashFunc1, HashFunc2>::calcHash2(const T& string, int size) const {
-		return (std::abs(HashFunc2(string)) + 1) % size;
+		return std::abs(HashFunc2(string)) % size;
 	}
 
 	template<class T, int HashFunc1(const T&), int HashFunc2(const T&)>
@@ -226,6 +226,11 @@ namespace hash_table {
 		auto h1 = calcHash1(value);
 		auto h2 = calcHash2(value);
 
+		// protection against endless loop
+		if (!h2) {
+			h2 = 1;
+		}
+
 		int i = 0;
 		int result_index = -1;
 		while (i < buffer_size) {
@@ -252,7 +257,7 @@ namespace hash_table {
 				}
 			}
 
-			h1 = (h1 + h2 + 1) % buffer_size;
+			h1 = (h1 + h2) % buffer_size;
 			++i;
 		}
 
@@ -270,6 +275,11 @@ namespace hash_table {
 		auto h1 = calcHash1(value);
 		auto h2 = calcHash2(value);
 
+		// protection against endless loop
+		if (!h2) {
+			h2 = 1;
+		}
+
 		int i = 0;
 		while (i < buffer_size) {
 			Node*& node = data[h1];
@@ -285,7 +295,7 @@ namespace hash_table {
 				return node;
 			}
 
-			h1 = (h1 + h2 + 1) % buffer_size;
+			h1 = (h1 + h2) % buffer_size;
 			++i;
 		}
 
