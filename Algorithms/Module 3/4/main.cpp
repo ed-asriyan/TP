@@ -51,7 +51,7 @@ namespace binarytree {
 			 * @param k K parameter.
 			 * @return K Statistics
 			 */
-			T CalcKStats(size_t k) const;
+			const T& CalcKStats(size_t k) const;
 
 		protected:
 			struct Node {
@@ -62,7 +62,6 @@ namespace binarytree {
 
 				size_t height = 1;
 				Node* left = nullptr;
-
 				Node* right = nullptr;
 			};
 
@@ -81,8 +80,6 @@ namespace binarytree {
 			Node* remove(Node* node, const T& value);
 
 			Node* removeMin(Node* node);
-
-			T calcKStats(const Node* node, size_t k) const;
 
 		private:
 			Node* root = nullptr;
@@ -237,17 +234,28 @@ namespace binarytree {
 	}
 
 	template<class T>
-	T AvlTree<T>::calcKStats(const Node* node, size_t k) const {
-		T result;
+	const T& AvlTree<T>::CalcKStats(size_t k) const {
+		T* result = nullptr;
 
-		// todo:
+		if (k < calcSize(root)) {
+			Node* p = root;
+			auto k_index = calcSize(root->left);
 
-		return result;
-	}
+			while (k_index != k) {
 
-	template<class T>
-	T AvlTree<T>::CalcKStats(size_t k) const {
-		return calcKStats(root, k);
+				if (k > k_index) {
+					p = p->right;
+					k_index = k_index + calcSize(p->left) + 1;
+				} else {
+					p = p->left;
+					k_index = k_index - calcSize(p->right) - 1;
+				}
+			}
+
+			result = &p->value;
+		}
+
+		return *result;
 	}
 
 	template<class T>
@@ -276,24 +284,25 @@ namespace binarytree {
 }
 
 int main() {
-	size_t command_count{};
-	std::cin >> command_count;
-
-	int command{};
-	size_t k_statistics{};
+	size_t count;
+	std::cin >> count;
 
 	binarytree::AvlTree<int> tree;
 
-	for (size_t i{}; i < command_count; ++i) {
-		std::cin >> command >> k_statistics;
+	for (size_t i = 0; i < count; ++i) {
+		int value;
+		size_t k;
 
-		if (command < 0) {
-			tree.Remove(-command);
+		std::cin >> value >> k;
+
+		if (value < 0) {
+			tree.Remove(-value);
 		} else {
-			tree.Insert(command);
+			tree.Insert(value);
 		}
 
-		std::cout << tree.CalcKStats(k_statistics) << std::endl;
+		std::cout << tree.CalcKStats(k) << std::endl;
 	}
+
 	return 0;
 }
