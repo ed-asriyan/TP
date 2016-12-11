@@ -176,40 +176,35 @@ namespace binarytree {
 	}
 
 	template<class T>
-	typename AvlTree<T>::Node* AvlTree<T>::remove(Node* root, const T& value) {
-		if (root == nullptr) {
+	typename AvlTree<T>::Node* AvlTree<T>::remove(Node* node, const T& value) {
+		if (node == nullptr) {
 			return nullptr;
 		}
 
-		if (value < root->value) {
-			root->left = remove(root->left, value);
-		} else if (value > root->value) {
-			root->right = remove(root->right, value);
+		if (value < node->value) {
+			node->left = remove(node->left, value);
+		} else if (value > node->value) {
+			node->right = remove(node->right, value);
 		} else {
-
-			if (root->left == nullptr || root->right == nullptr) {
-				Node* temp = root->left ? root->left : root->right;
+			if (node->left == nullptr || node->right == nullptr) {
+				Node* temp = node->left == nullptr ? node->right : node->left;
 
 				if (temp == nullptr) {
-					temp = root;
-					root = nullptr;
+					temp = node;
+					node = nullptr;
 				} else {
-					*root = *temp;
+					*node = *temp;
 				}
 
 				delete temp;
 			} else {
-				Node* temp = findMin(root->right);
-				root->value = temp->value;
-				root->right = remove(root->right, temp->value);
+				Node* temp = findMin(node->right);
+				node->value = temp->value;
+				node->right = remove(node->right, temp->value);
 			}
 		}
 
-		if (root == nullptr) {
-			return root;
-		}
-
-		return balance(root);
+		return balance(node);
 	}
 
 	template<class T>
@@ -242,7 +237,6 @@ namespace binarytree {
 			auto k_index = calcSize(root->left);
 
 			while (k_index != k) {
-
 				if (k > k_index) {
 					p = p->right;
 					k_index = k_index + calcSize(p->left) + 1;
