@@ -41,12 +41,6 @@ namespace binarytree {
 			void Remove(const T& value);
 
 			/**
-			 * @brief Calculates tree height.
-			 * @return Tree height
-			 */
-			size_t CalcSize() const;
-
-			/**
 			 * @brief Calculates K Statistics.
 			 * @param k K parameter.
 			 * @return K Statistics
@@ -61,14 +55,16 @@ namespace binarytree {
 				T value;
 
 				size_t height = 1;
+				size_t size = 1;
 				Node* left = nullptr;
 				Node* right = nullptr;
 			};
 
 			size_t get_height(const Node* node) const;
+			size_t get_size(const Node* node) const;
 			int calcBalanceFactor(const Node* node) const;
 			void fixHeight(Node* node);
-			size_t calcSize(const Node* node) const;
+			void fixSize(Node* node);
 
 			Node* rotateRight(Node* p);
 			Node* rotateLeft(Node* q);
@@ -97,6 +93,11 @@ namespace binarytree {
 	}
 
 	template<class T>
+	size_t AvlTree<T>::get_size(const Node* node) const {
+		return node == nullptr ? 0 : node->size;
+	}
+
+	template<class T>
 	int AvlTree<T>::calcBalanceFactor(const Node* node) const {
 		if (node == nullptr) {
 			return 0;
@@ -115,6 +116,14 @@ namespace binarytree {
 	}
 
 	template<class T>
+	void AvlTree<T>::fixSize(Node* node) {
+		if (node == nullptr) return;
+		auto s_left = get_size(node->left);
+		auto s_right = get_size(node->right);
+		node->size = s_left + s_right + 1;
+	}
+
+	template<class T>
 	typename AvlTree<T>::Node* AvlTree<T>::rotateRight(AvlTree::Node* p) {
 		if (p == nullptr) return nullptr;
 
@@ -123,7 +132,10 @@ namespace binarytree {
 		q->right = p;
 
 		fixHeight(p);
+		fixSize(p);
 		fixHeight(q);
+		fixSize(q);
+
 		return q;
 	}
 
@@ -136,7 +148,10 @@ namespace binarytree {
 		p->left = q;
 
 		fixHeight(q);
+		fixSize(q);
 		fixHeight(p);
+		fixSize(p);
+
 		return p;
 	}
 
@@ -147,6 +162,8 @@ namespace binarytree {
 		}
 
 		fixHeight(p);
+		fixSize(p);
+
 		if (calcBalanceFactor(p) == 2) {
 			if (calcBalanceFactor(p->right) < 0) {
 				p->right = rotateRight(p->right);
@@ -159,6 +176,7 @@ namespace binarytree {
 			}
 			return rotateRight(p);
 		}
+
 		return p;
 	}
 
@@ -236,38 +254,26 @@ namespace binarytree {
 	const T& AvlTree<T>::CalcKStats(size_t k) const {
 		T* result = nullptr;
 
-		if (k < calcSize(root)) {
+		if (k < get_size(root)) {
 			Node* p = root;
-			auto k_index = calcSize(root->left);
+			auto k_index = get_size(p->left);
 
 			while (k_index != k) {
 				if (k > k_index) {
 					p = p->right;
-					k_index += calcSize(p->left) + 1;
+					k_index += get_height(p->left) + 1;
 				} else {
 					p = p->left;
-					k_index -= calcSize(p->right) + 1;
+					k_index -= get_height(p->right) + 1;
 				}
 			}
 
 			result = &p->value;
-		}
+		} else {
+			assert(false);
+		};
 
 		return *result;
-	}
-
-	template<class T>
-	size_t AvlTree<T>::calcSize(const Node* node) const {
-		if (node == nullptr) {
-			return 0;
-		} else {
-			return calcSize(node->left) + calcSize(node->right) + 1;
-		}
-	}
-
-	template<class T>
-	size_t AvlTree<T>::CalcSize() const {
-		return calcSize(root);
 	}
 
 	template<class T>
