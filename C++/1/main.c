@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
 #define BUFFER_RESIZE_FACTOR 2
 
 // --- get_line ---------------------------------------------
@@ -121,6 +123,37 @@ string_vector_t* scan_string_vector(FILE* in) {
 }
 
 // ---------------------------------------------------------
+
+int cmp_str_begin(char* a, char* b) {
+	size_t a_len = strlen(a);
+	size_t b_len = strlen(b);
+	size_t len = MAX(a_len, b_len);
+	for (size_t i = 0; i < len; ++i) {
+		if (a[i] != b[i]) {
+			return 0;
+		}
+	}
+	return 1;
+}
+
+int is_open_tag(char* s) {
+	return cmp_str_begin(s, "<div>");
+}
+
+int is_close_tag(char* s) {
+	return cmp_str_begin(s, "</div>");
+}
+
+char* skip_space(char* s) {
+	while (*s++ == ' ');
+	char* result = s - 1;
+
+	char* end = s + strlen(s);
+	while (*--end == ' ');
+	*end = '\0';
+
+	return result;
+}
 
 char** div_format(char** s) {
 	string_vector_t* vector = create_string_vector();
