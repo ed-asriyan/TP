@@ -8,20 +8,19 @@
  */
 
 #include <iostream>
-#include <vector>
 
 /**
  * @brief Merge two arrays to ont
  * @param a Pointer to the initial position in the first array.
- * @param a_len Length of the fisrt array.
+ * @param a_len Length of the first array.
  * @param b Pointer to the initial position in the second array.
  * @param b_len Length of the second array.
  * @param out Pointer to the initial position in the output array.
  */
 template<class T>
-void Merge(T* a, int a_len, T* b, int b_len, T* out) {
-	int i = 0;
-	int j = 0;
+void Merge(const T* a, size_t a_len, const T* b, size_t b_len, T* out) {
+	size_t i = 0;
+	size_t j = 0;
 
 	for (; i < a_len && j < b_len;) {
 		if (a[i] < b[j]) {
@@ -49,23 +48,22 @@ void Merge(T* a, int a_len, T* b, int b_len, T* out) {
  * @param count Length of the array.
  */
 template<class T>
-void MergeSort(T* data, int count) {
+void MergeSort(T* data, size_t count) {
 	T* temp = new T[count];
-	for (int i = 1; i < count; i *= 2) {
-		// distance o the next array to sort
-		int offset = 0;
+	for (size_t i = 1; i < count; i *= 2) {
+		size_t offset = 0;
 
 		for (; offset + i < count; offset += i * 2) {
 			Merge(data + offset, i, data + offset + i, std::min(i, count - i - offset), temp + offset);
 		}
 
 		if (offset < count) {
-			for (int j = offset; j < count; ++j) {
+			for (size_t j = offset; j < count; ++j) {
 				temp[j] = data[j];
 			}
 		}
 
-		for (int j = 0; j < count; ++j) {
+		for (size_t j = 0; j < count; ++j) {
 			data[j] = temp[j];
 		}
 	}
@@ -74,40 +72,37 @@ void MergeSort(T* data, int count) {
 
 /**
  * @brief Sorts the vector.
- * @param data Vector.
+ * @param data Pointer to the initial position in the sequence to sort.
+ * @param size Sequence size.
  * @param k Minimal distance between sorted elements.
  */
 template<class T>
-void Sort(std::vector<T>& data, int k) {
-	int size = static_cast<int>(data.size());
+void Sort(T* data, size_t size, size_t k) {
+	MergeSort(data, k);
+	for (size_t offset = k; offset < size; offset += k) {
+		size_t len = std::min(k, size - offset);
+		T* temp = new T[len + offset];
 
-	// sort first k elements
-	int offset = k;
-	MergeSort(&data[0], k);
+		MergeSort(data + offset, len);
+		Merge(data + (offset - k), k, data + offset, len, temp);
+		std::copy(temp, temp + (len + offset), data + (offset - k));
 
-	for (int i = k; i < size; i += k) {
-		MergeSort(&data[0] + offset, k);
-		Merge(&data[0], k, &data[0] + offset, k, &data[0]);
-
-		offset += k;
+		delete[] temp;
 	}
 }
 
 int main() {
-	int count, k;
+	size_t count, k;
 	std::cin >> count >> k;
 
-	std::vector<int> data;
-	data.reserve(static_cast<unsigned long>(count));
-	for (int i = 0; i < count; ++i) {
-		int value;
-		std::cin >> value;
-		data.push_back(value);
+	int* data = new int[count];
+	for (size_t i = 0; i < count; ++i) {
+		std::cin >> data[i];
 	}
 
-	Sort(data, count);
+	Sort(data, count, k);
 
-	for (int i = 0; i < count; ++i) {
+	for (size_t i = 0; i < count; ++i) {
 		std::cout << data[i] << ' ';
 	}
 
