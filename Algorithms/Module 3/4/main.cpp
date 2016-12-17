@@ -45,7 +45,7 @@ namespace binarytree {
 			 * @param k K parameter.
 			 * @return K Statistics
 			 */
-			T CalcKStats(size_t k) const;
+			const T& CalcKStats(size_t k) const;
 
 		protected:
 			struct Node {
@@ -243,7 +243,7 @@ namespace binarytree {
 	}
 
 	template<class T>
-	T AvlTree<T>::CalcKStats(size_t k) const {
+	const T& AvlTree<T>::CalcKStats(size_t k) const {
 		T* result = nullptr;
 
 		if (k < get_size(root)) {
