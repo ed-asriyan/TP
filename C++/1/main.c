@@ -3,10 +3,11 @@
 #include <string.h>
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 #define BUFFER_RESIZE_FACTOR 2
 
-// --- get_line ---------------------------------------------
+// --- string helpers ---------------------------------------------
 
 size_t get_line(FILE* input, char** result) {
 	if (input == NULL || result == NULL) {
@@ -28,6 +29,15 @@ size_t get_line(FILE* input, char** result) {
 	str[size] = '\0';
 	*result = str;
 	return size;
+}
+
+char* append_str(char* source, const char* str, size_t s_len) {
+	size_t source_len = source == NULL ? 0 : strlen(source);
+	size_t str_len = str == NULL ? 0 : strlen(str);
+	str_len = MIN(s_len, str_len);
+	source = (char*) realloc(source, sizeof(char) * (source_len + str_len + 1));
+	memcpy(source + source_len, str, str_len);
+	return source;
 }
 
 // --- StringVector -----------------------------------------
