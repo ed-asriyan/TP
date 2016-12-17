@@ -1,1 +1,0 @@
-/usr/bin/c++    -static -Wall -std=gnu++11 -lm   CMakeFiles/HashTable.dir/main.cpp.o  -o HashTable 
