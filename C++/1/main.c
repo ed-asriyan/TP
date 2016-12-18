@@ -154,15 +154,31 @@ int is_close_tag(char* s) {
 	return cmp_str_begin(s, "</div>");
 }
 
-char* skip_space(char* s) {
+/**
+ * @brief Determines begin & end of the string by skipping white spaces.
+ * @param str Pointer to the pointer to the initial position in the string to write in it new string beginning.
+ * @return Filtered string length.
+ */
+size_t skip_space(const char** str) {
+	if (str == NULL || *str == NULL || **str == '\0') {
+		return 0;
+	}
+
+	// detecting beginning of the string
+	const char* s = *str;
 	while (*s++ == ' ');
-	char* result = s - 1;
+	const char* const begin = s - 1;
 
-	char* end = s + strlen(s);
-	while (*--end == ' ');
-	*end = '\0';
+	// detecting end of the string
+	size_t length = strlen(begin);
+	s = begin + (length - 1);
+	while (*s == ' ' && length > 0) {
+		--length;
+		--s;
+	}
 
-	return result;
+	*str = begin;
+	return length;
 }
 
 char** div_format(char** s) {
