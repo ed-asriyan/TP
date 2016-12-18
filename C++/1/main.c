@@ -9,19 +9,49 @@
 
 // --- string helpers ---------------------------------------------
 
+/**
+ * @brief Reads line from the stream input.
+ * @param input Input stream.
+ * @param result Pointer to the pointer to the result line.
+ * @return Line length.
+ *
+ * Reads line from the stream input. On memory error *result = NULL.
+ *
+ * Usage:
+ *  char* c;
+ *  get_line(stdin, &c);
+ *  if (c != NULL) {
+ *  	printf("%s", c);
+ *  	free(c);
+ *  } else  {
+ *  	printf("[ error ]");
+ *  }
+ */
 size_t get_line(FILE* input, char** result) {
+	const unsigned char RESIZE_FACTOR = 2;
+
 	if (input == NULL || result == NULL) {
 		return 0;
 	}
 
 	char* str = (char*) malloc(sizeof(char));
+	if (str == NULL) {
+		*result = NULL;
+		return 0;
+	}
 	size_t buffer_size = 1;
 	size_t size = 0;
 
 	char c;
 	while (fscanf(input, "%c", &c) == 1 && c != '\n') {
 		if (++size == buffer_size) {
-			str = (char*) realloc(str, sizeof(char) * ((buffer_size *= BUFFER_RESIZE_FACTOR) + 1));
+			char* new_str = (char*) realloc(str, sizeof(char) * ((buffer_size *= RESIZE_FACTOR) + 1));
+			if (new_str == NULL) {
+				free(str);
+				*result = NULL;
+				return NULL;
+			}
+			str = new_str;
 		}
 		str[size - 1] = c;
 	}
