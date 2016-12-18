@@ -336,7 +336,6 @@ char** div_format(const char** s) {
 				++level;
 
 				// add offset to the current_str beginning
-				// if no level offset is not necessary
 				current_str = (char*) malloc(sizeof(char) * (level * OFFSET + 1));
 				memset(current_str, ' ', OFFSET * level);
 				current_str[OFFSET * level] = '\0';
@@ -377,6 +376,7 @@ char** div_format(const char** s) {
 					current_str[level * OFFSET] = '\0';
 				} else {
 					current_str = NULL;
+					is_empty = 1;
 				}
 
 				// add close tag to the vector
@@ -403,6 +403,13 @@ char** div_format(const char** s) {
 			const char* begin = str + begin_pos;
 			size_t line_len = skip_space(&begin, str_len - begin_pos);
 			append_str(&current_str, ULONG_MAX, begin, line_len);
+			add_string_vector(vector, current_str);
+			is_empty = 1;
+
+			// add offset to the current_str beginning
+			current_str = (char*) malloc(sizeof(char) * (level * OFFSET + 1));
+			memset(current_str, ' ', OFFSET * level);
+			current_str[OFFSET * level] = '\0';
 		}
 		++s;
 	}
