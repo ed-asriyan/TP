@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
+#include <assert.h>
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -61,13 +63,50 @@ size_t get_line(FILE* input, char** result) {
 	return size;
 }
 
-char* append_str(char* source, const char* str, size_t s_len) {
-	size_t source_len = source == NULL ? 0 : strlen(source);
-	size_t str_len = str == NULL ? 0 : strlen(str);
-	str_len = MIN(s_len, str_len);
-	source = (char*) realloc(source, sizeof(char) * (source_len + str_len + 1));
-	memcpy(source + source_len, str, str_len);
-	return source;
+/**
+ * @brief Appends (concatenates) *source and str.
+ * @param source Pointer to the left (and resulting) string.
+ * @param The number of characters from the source beginning to process.
+ * @param str Pointer to the right string.
+ * @param str_len The number of characters from the str beginning to process.
+ * @return 1 if operation is completed; otherwise 0.
+ *
+ * Usage:
+ *  char* s1 = (char*)malloc(sizeof(char) * 5);
+ *  strcpy(s1, "abcd");
+ *  char* s2 = (char*)malloc(sizeof(char) * 10);
+ *  strcpy(s2, "123456789");
+ *  if (append_str(&s1, INTMAX, s2, 3)) {
+ *  	printf("%s", s1); // abcd123
+ *  } else {
+ *  	printf("[ error ]");
+ *  }
+ *  free(s2);
+ *  free(s1);
+ */
+int append_str(char** source, size_t source_len, const char* str, size_t str_len) {
+	if (source == NULL) {
+		return 0;
+	}
+
+	size_t source_length = *source == NULL ? 0 : strlen(*source);
+	source_len = MIN(source_length, source_len);
+
+	size_t string_len = str == NULL ? 0 : strlen(str);
+	str_len = MIN(string_len, str_len);
+	if (str_len == 0) {
+		return 1;
+	}
+
+	char* new_source = (char*) realloc(*source, sizeof(char) * (source_len + str_len + 1));
+	if (new_source == NULL) {
+		return 0;
+	}
+	memcpy(new_source + source_len, str, str_len);
+	new_source[source_len + str_len] = '\0';
+
+	*source = new_source;
+	return 1;
 }
 
 // --- StringVector -----------------------------------------
@@ -157,6 +196,7 @@ string_vector_t* scan_string_vector(FILE* in) {
 	while (!feof(in)) {
 		char* str;
 		get_line(in, &str);
+		if (str[0] == '`') break;
 		add_string_vector(vector, str);
 	}
 	return vector;
@@ -167,7 +207,7 @@ string_vector_t* scan_string_vector(FILE* in) {
 int cmp_str_begin(char* a, char* b) {
 	size_t a_len = strlen(a);
 	size_t b_len = strlen(b);
-	size_t len = MAX(a_len, b_len);
+	size_t len = MIN(a_len, b_len);
 	for (size_t i = 0; i < len; ++i) {
 		if (a[i] != b[i]) {
 			return 0;
@@ -176,12 +216,12 @@ int cmp_str_begin(char* a, char* b) {
 	return 1;
 }
 
-int is_open_tag(char* s) {
-	return cmp_str_begin(s, "<div>");
+int is_open_tag(const char* s) {
+	return cmp_str_begin(s, "<div>") * 5;
 }
 
-int is_close_tag(char* s) {
-	return cmp_str_begin(s, "</div>");
+int is_close_tag(const char* s) {
+	return cmp_str_begin(s, "</div>") * 6;
 }
 
 /**
@@ -211,18 +251,66 @@ size_t skip_space(const char** str) {
 	return length;
 }
 
-char** div_format(char** s) {
+const char** div_format(const char** s) {
 	string_vector_t* vector = create_string_vector();
+
+	char* str = NULL;
+	int level = 0;
+
 	while (*s != NULL) {
-		char* str = (char*) malloc(sizeof(char*) * (strlen(*s) + 1));
-		strcpy(str, *s);
-		add_string_vector(vector, str);
+		size_t begin_pos = 0;
+		size_t end_pos = 0;
+		size_t s_len = strlen(*s);
+
+		for (size_t i = 0; i < s_len;) {
+			if (level < 0) {
+				assert(0);
+			}
+			if (is_open_tag(*s + i)) {
+				begin_pos = i += 5;
+				++level;
+			} else if (is_close_tag(*s + i)) {
+//				str = append_str(str, *s + begin_pos, i - begin_pos);
+				end_pos = i += 6;
+				--level;
+				str = NULL;
+			} else {
+				++i;
+			}
+		}
+
 		++s;
 	}
+	add_string_vector(vector, str);
 	return extract_buffer(vector);
 }
 
 int main() {
+	char* s;
+	char* d;
+	if (!get_line(stdin, &s)) assert(0);
+	if (!get_line(stdin, &d)) assert(0);
+
+	printf("%s|\n", s);
+	char* ss = s;
+	const size_t i = skip_space((const char**) (&ss));
+	ss[i] = '\0';
+	printf("%s|\n", ss);
+
+	printf("%s|\n", d);
+	char* dd = d;
+	const size_t j = skip_space((const char**) (&dd));
+	dd[j] = '\0';
+	printf("%s|\n", dd);
+
+	append_str(&s, ULLONG_MAX, dd, ULONG_MAX);
+	printf("%s|\n", s);
+
+	free(d);
+	free(s);
+
+	return 0;
+
 	string_vector_t* vector = scan_string_vector(stdin);
 	char** input = extract_buffer(vector);
 
