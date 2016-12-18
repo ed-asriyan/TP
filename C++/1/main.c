@@ -286,10 +286,13 @@ size_t skip_space(const char** str) {
 }
 
 char** div_format(const char** s) {
+	const size_t OFFSET = 4;
+
 	string_vector_t* vector = create_string_vector();
 
 	char* current_str = NULL;
 	int level = 0;
+	int is_empty = 1; // determines whether current_str contains one useful character at least
 
 	while (*s != NULL) {
 		size_t begin_pos = 0;
@@ -306,39 +309,66 @@ char** div_format(const char** s) {
 			// 1. add remaining string part to the current_str;
 			// 2. add current_str to the vector;
 			// 3. clean current_str;
-			// 4. add tag to the vector;
-			// 5. increase or decrease level;
-			// 6. move begin index;
-			// 7. increase i by tag length;
+			// 4. set is_empty = 1 (because of 3);
+			// 5. add tag to the vector;
+			// 6. increase or decrease level;
+			// 7. move begin index;
+			// 8. increase i by tag length;
 			if (is_open_tag(*s + i)) {
-				append_str(&current_str, ULONG_MAX, (str + begin_pos), (i - begin_pos));
-				if (current_str != NULL) {
+				if (!is_empty) {
 					add_string_vector(vector, current_str);
 					current_str = NULL;
 				}
 
-				char* tag = (char*) malloc(sizeof(char) * 6);
-				strcpy(tag, "<div>");
+				char* tag = (char*) malloc(sizeof(char) * (level * OFFSET + 6));
+				memset(tag, ' ', OFFSET * level);
+				memcpy(tag + (level * OFFSET), "<div>", 5);
+				tag[level * OFFSET + 6] = '\0';
 				add_string_vector(vector, tag);
 
-				begin_pos = i += 5;
 				++level;
-			} else if (is_close_tag(*s + i)) {
 				append_str(&current_str, ULONG_MAX, (str + begin_pos), (i - begin_pos));
-				if (current_str != NULL) {
-					add_string_vector(vector, current_str);
+				is_empty = 1;
+
+				// if level != 0 add offset
+				if (level) {
+					current_str = (char*) malloc(sizeof(char) * (level * OFFSET + 1));
+					memset(current_str, ' ', OFFSET * level);
+					current_str[OFFSET * level] = '\0';
+				} else {
 					current_str = NULL;
 				}
 
-				char* tag = (char*) malloc(sizeof(char) * 7);
-				strcpy(tag, "</div>");
+				begin_pos = i += 5;
+			} else if (is_close_tag(*s + i)) {
+				--level;
+				if (!is_empty) {
+					append_str(&current_str, ULONG_MAX, (str + begin_pos), (i - begin_pos));
+					add_string_vector(vector, current_str);
+					is_empty = 1;
+				}
+				// if level != 0 add offset
+				if (level) {
+					current_str = (char*) malloc(sizeof(char) * (level * OFFSET + 1));
+					memset(current_str, ' ', level * OFFSET);
+					current_str[level * OFFSET] = '\0';
+				} else {
+					current_str = NULL;
+				}
+
+				char* tag = (char*) malloc(sizeof(char) * (level * OFFSET + 7));
+				memset(tag, ' ', OFFSET * level);
+				memcpy(tag + (level * OFFSET), "</div>", 6);
+				tag[level * OFFSET + 7] = '\0';
 				add_string_vector(vector, tag);
 
 				begin_pos = i += 6;
-				--level;
 			} else {
 				// on general character:
 				// 1. increase i by 1;
+				if (is_empty) {
+					is_empty = str[i] == ' ';
+				}
 				++i;
 			}
 		}
