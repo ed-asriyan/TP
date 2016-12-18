@@ -2,12 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
-#include <assert.h>
 
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
-
-#define BUFFER_RESIZE_FACTOR 2
 
 // --- string helpers ---------------------------------------------
 
@@ -149,13 +145,25 @@ struct StringVector {
 
 typedef struct StringVector string_vector_t;
 
+/**
+ * @brief Increases vector buffer by N times.
+ * @param vector Pointer to vector instance.
+ * @return 1 if operation is completed; otherwise 0;
+ */
 int resize_string_vector(string_vector_t* vector) {
 	if (vector == NULL) {
 		return 0;
 	}
 
-	vector->buffer =
-		(char**) realloc(vector->buffer, sizeof(char*) * ((vector->buffer_size *= BUFFER_RESIZE_FACTOR) + 1));
+	const int RESIZE_FACTOR = 2;
+	char** new_buffer = (char**) realloc(vector->buffer, sizeof(char*) * ((vector->buffer_size *= RESIZE_FACTOR) + 1));
+	if (new_buffer == NULL) {
+		return 0;
+	}
+	vector->buffer = new_buffer;
+
+
+	// remaining no-initialized items
 	for (size_t i = vector->size; i <= vector->buffer_size; ++i) {
 		vector->buffer[i] = NULL;
 	}
@@ -163,26 +171,47 @@ int resize_string_vector(string_vector_t* vector) {
 	return 1;
 }
 
+/**
+ * @brief Adds string to the vector: push back;
+ * @param vector Pointer to vector instance.
+ * @param str Pointer to the initial position in the string.
+ * @return 1 if operation is completed; otherwise 0;
+ */
 int add_string_vector(string_vector_t* vector, char* str) {
 	if (vector == NULL) return 0;
 	if (vector->size == vector->buffer_size) {
-		resize_string_vector(vector);
+		if (!resize_string_vector(vector)) {
+			return 0;
+		}
 	}
 
 	if (str == NULL) {
 		str = (char*) malloc(sizeof(char));
+		if (str == NULL) {
+			return 0;
+		}
 		*str = '\0';
 	}
+
 	vector->buffer[vector->size++] = str;
 	return 1;
 }
 
+/**
+ * @brief Destroys vector instance & returns buffer.
+ * @param vector Pointer to vector instance.
+ * @return Pointer to the vector buffer.
+ */
 char** extract_buffer(string_vector_t* vector) {
 	char** result = vector->buffer;
 	free(vector);
 	return result;
 }
 
+/**
+ * @brief Destroys vector buffer.
+ * @param buffer Pointer to the buffer.
+ */
 void free_buffer(char** buffer) {
 	for (size_t i = 0; buffer[i] != NULL; ++i) {
 		free(buffer[i]);
@@ -190,10 +219,18 @@ void free_buffer(char** buffer) {
 	free(buffer);
 }
 
+/**
+ * @brief Destroys vector.
+ * @param vector Pointer to vector instance.
+ */
 void free_string_vector(string_vector_t* vector) {
 	free_buffer(extract_buffer(vector));
 }
 
+/**
+ * @brief Creates new vector instance.
+ * @return if operation is completed, pointer to vector instance; otherwise NULL.
+ */
 string_vector_t* create_string_vector() {
 	string_vector_t* vector = (string_vector_t*) malloc(sizeof(string_vector_t));
 	if (vector == NULL) {
@@ -201,6 +238,10 @@ string_vector_t* create_string_vector() {
 	}
 
 	vector->buffer = (char**) malloc(sizeof(char*));
+	if (vector->buffer == NULL) {
+		free(vector);
+		return NULL;
+	}
 	vector->buffer[0] = NULL;
 	vector->buffer_size = 1;
 	vector->size = 0;
@@ -210,6 +251,11 @@ string_vector_t* create_string_vector() {
 	return vector;
 }
 
+/**
+ * @brief Prints buffer items to the out.
+ * @param out Output stream.
+ * @param buffer Pointer to the buffer.
+ */
 void print_string_buffer(FILE* out, char** buffer) {
 	if (out == NULL || buffer == NULL) return;
 
@@ -219,18 +265,30 @@ void print_string_buffer(FILE* out, char** buffer) {
 	}
 }
 
+/**
+ * @brief Prints vector items to the out.
+ * @param out Output stream.
+ * @param vector Pointer to the vector.
+ */
 void print_string_vector(FILE* out, const string_vector_t* vector) {
 	if (out == NULL || vector == NULL) return;;
 
 	print_string_buffer(out, vector->buffer);
 }
 
+/**
+ * @brief Scans items from the out to the vector.
+ * @param in Input stream.
+ * @return If operation is completed, pointer to the vector instance; otherwise NULL.
+ */
 string_vector_t* scan_string_vector(FILE* in) {
 	string_vector_t* vector = create_string_vector();
-	while (!feof(in)) {
-		char* str;
-		get_line(in, &str);
-		add_string_vector(vector, str);
+	if (vector != NULL) {
+		while (!feof(in)) {
+			char* str;
+			get_line(in, &str);
+			add_string_vector(vector, str);
+		}
 	}
 	return vector;
 }
