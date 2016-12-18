@@ -109,6 +109,36 @@ int append_str(char** source, size_t source_len, const char* str, size_t str_len
 	return 1;
 }
 
+/**
+ * @brief Returns substring beginnings by begin index & ends by end index.
+ * @param source Source string.
+ * @param begin Beginning index.
+ * @param end Ending index.
+ * @return Substring beginnings by begin index & ends by end index.
+ *
+ * Usage:
+ *  const char* s = "abcdef";
+ *  char* sub_s = sub_str(s, 1, 4);
+ *  if (sub_s != NULL) {
+ *  	printf("%s", sub_s); // bcd
+ *  	free(sub_s);
+ *  }
+ */
+char* sub_str(const char* source, size_t begin, size_t end) {
+	if (source == NULL) {
+		return NULL;
+	}
+
+	size_t length = end - begin;
+	char* result = (char*) malloc(sizeof(char) * (length + 1));
+	if (result == NULL) {
+		return NULL;
+	}
+	memcpy(result, source + begin, length);
+	result[length] = '\0';
+	return result;
+}
+
 // --- StringVector -----------------------------------------
 
 struct StringVector {
