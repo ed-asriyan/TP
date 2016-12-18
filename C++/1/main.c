@@ -51,7 +51,7 @@ size_t get_line(FILE* input, char** result) {
 			if (new_str == NULL) {
 				free(str);
 				*result = NULL;
-				return NULL;
+				return 0;
 			}
 			str = new_str;
 		}
@@ -89,14 +89,14 @@ int append_str(char** source, size_t source_len, const char* str, size_t str_len
 		return 0;
 	}
 
-	size_t source_length = *source == NULL ? 0 : strlen(*source);
-	source_len = MIN(source_length, source_len);
-
 	size_t string_len = str == NULL ? 0 : strlen(str);
 	str_len = MIN(string_len, str_len);
 	if (str_len == 0) {
 		return 1;
 	}
+
+	size_t source_length = *source == NULL ? 0 : strlen(*source);
+	source_len = MIN(source_length, source_len);
 
 	char* new_source = (char*) realloc(*source, sizeof(char) * (source_len + str_len + 1));
 	if (new_source == NULL) {
@@ -169,6 +169,10 @@ int add_string_vector(string_vector_t* vector, char* str) {
 		resize_string_vector(vector);
 	}
 
+	if (str == NULL) {
+		str = (char*) malloc(sizeof(char));
+		*str = '\0';
+	}
 	vector->buffer[vector->size++] = str;
 	return 1;
 }
@@ -234,7 +238,7 @@ string_vector_t* scan_string_vector(FILE* in) {
 
 // ---------------------------------------------------------
 
-int cmp_str_begin(char* a, char* b) {
+int cmp_str_begin(const char* a, const char* b) {
 	size_t a_len = strlen(a);
 	size_t b_len = strlen(b);
 	size_t len = MIN(a_len, b_len);
@@ -281,70 +285,85 @@ size_t skip_space(const char** str) {
 	return length;
 }
 
-const char** div_format(const char** s) {
+char** div_format(const char** s) {
 	string_vector_t* vector = create_string_vector();
 
-	char* str = NULL;
+	char* current_str = NULL;
 	int level = 0;
 
 	while (*s != NULL) {
 		size_t begin_pos = 0;
-		size_t end_pos = 0;
-		size_t s_len = strlen(*s);
+		const char* str = *s;
+		size_t str_len = strlen(*s);
 
-		for (size_t i = 0; i < s_len;) {
+		for (size_t i = 0; i < str_len;) {
+			// check for level
 			if (level < 0) {
 				assert(0);
 			}
+
+			// on any tag:
+			// 1. add remaining string part to the current_str;
+			// 2. add current_str to the vector;
+			// 3. clean current_str;
+			// 4. add tag to the vector;
+			// 5. increase or decrease level;
+			// 6. move begin index;
+			// 7. increase i by tag length;
 			if (is_open_tag(*s + i)) {
+				append_str(&current_str, ULONG_MAX, (str + begin_pos), (i - begin_pos));
+				if (current_str != NULL) {
+					add_string_vector(vector, current_str);
+					current_str = NULL;
+				}
+
+				char* tag = (char*) malloc(sizeof(char) * 6);
+				strcpy(tag, "<div>");
+				add_string_vector(vector, tag);
+
 				begin_pos = i += 5;
 				++level;
 			} else if (is_close_tag(*s + i)) {
-//				str = append_str(str, *s + begin_pos, i - begin_pos);
-				end_pos = i += 6;
+				append_str(&current_str, ULONG_MAX, (str + begin_pos), (i - begin_pos));
+				if (current_str != NULL) {
+					add_string_vector(vector, current_str);
+					current_str = NULL;
+				}
+
+				char* tag = (char*) malloc(sizeof(char) * 7);
+				strcpy(tag, "</div>");
+				add_string_vector(vector, tag);
+
+				begin_pos = i += 6;
 				--level;
-				str = NULL;
 			} else {
+				// on general character:
+				// 1. increase i by 1;
 				++i;
 			}
 		}
 
+		// 'if' block for empty line safety
+		if (begin_pos != str_len) {
+			append_str(&current_str, ULONG_MAX, (str + begin_pos), str_len - begin_pos);
+		}
 		++s;
 	}
-	add_string_vector(vector, str);
+
+	if (level) {
+		assert(0);
+	}
+
+	add_string_vector(vector, current_str);
+
 	return extract_buffer(vector);
 }
 
 int main() {
-	char* s;
-	char* d;
-	if (!get_line(stdin, &s)) assert(0);
-	if (!get_line(stdin, &d)) assert(0);
-
-	printf("%s|\n", s);
-	char* ss = s;
-	const size_t i = skip_space((const char**) (&ss));
-	ss[i] = '\0';
-	printf("%s|\n", ss);
-
-	printf("%s|\n", d);
-	char* dd = d;
-	const size_t j = skip_space((const char**) (&dd));
-	dd[j] = '\0';
-	printf("%s|\n", dd);
-
-	append_str(&s, ULLONG_MAX, dd, ULONG_MAX);
-	printf("%s|\n", s);
-
-	free(d);
-	free(s);
-
-	return 0;
-
 	string_vector_t* vector = scan_string_vector(stdin);
 	char** input = extract_buffer(vector);
 
-	char** output = div_format(input);
+	char** output = div_format((const char**) input);
 	print_string_buffer(stdout, output);
 
 	free_buffer(output);
