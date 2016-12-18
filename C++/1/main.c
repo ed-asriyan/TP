@@ -365,7 +365,8 @@ char** div_format(const char** s) {
 				begin_pos = i += 6;
 			} else {
 				// on general character:
-				// 1. increase i by 1;
+				// 1. update is_empty state;
+				// 2. increase i by 1;
 				if (is_empty) {
 					is_empty = str[i] == ' ';
 				}
