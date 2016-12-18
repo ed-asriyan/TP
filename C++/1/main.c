@@ -230,7 +230,6 @@ string_vector_t* scan_string_vector(FILE* in) {
 	while (!feof(in)) {
 		char* str;
 		get_line(in, &str);
-		if (str[0] == '`') break;
 		add_string_vector(vector, str);
 	}
 	return vector;
@@ -263,18 +262,19 @@ int is_close_tag(const char* s) {
  * @param str Pointer to the pointer to the initial position in the string to write in it new string beginning.
  * @return Filtered string length.
  */
-size_t skip_space(const char** str) {
+size_t skip_space(const char** str, size_t length) {
 	if (str == NULL || *str == NULL || **str == '\0') {
 		return 0;
 	}
 
 	// detecting beginning of the string
 	const char* s = *str;
-	while (*s++ == ' ');
+	while (*s++ == ' ') {
+		--length;
+	}
 	const char* const begin = s - 1;
 
 	// detecting end of the string
-	size_t length = strlen(begin);
 	s = begin + (length - 1);
 	while (*s == ' ' && length > 0) {
 		--length;
@@ -316,7 +316,9 @@ char** div_format(const char** s) {
 			// 8. increase i by tag length;
 			if (is_open_tag(*s + i)) {
 				// append current_str by data on current line
-				append_str(&current_str, ULONG_MAX, (str + begin_pos), (i - begin_pos));
+				const char* begin = str + begin_pos;
+				size_t line_len = skip_space(&begin, i - begin_pos);
+				append_str(&current_str, ULONG_MAX, begin, line_len);
 
 				// if current_str contains useful characters add it to the vector
 				// and reset current_str & is_empty = 1
@@ -354,7 +356,9 @@ char** div_format(const char** s) {
 				// if current_str contains useful characters add it to the vector
 				// and reset current_str & is_empty = 1
 				if (!is_empty) {
-					append_str(&current_str, ULONG_MAX, (str + begin_pos), (i - begin_pos));
+					const char* begin = str + begin_pos;
+					size_t line_len = skip_space(&begin, i - begin_pos);
+					append_str(&current_str, ULONG_MAX, begin, line_len);
 					add_string_vector(vector, current_str);
 					is_empty = 1;
 				}
@@ -390,7 +394,9 @@ char** div_format(const char** s) {
 
 		// 'if' block for empty line safety
 		if (!is_empty) {
-			append_str(&current_str, ULONG_MAX, (str + begin_pos), str_len - begin_pos);
+			const char* begin = str + begin_pos;
+			size_t line_len = skip_space(&begin, str_len - begin_pos);
+			append_str(&current_str, ULONG_MAX, begin, line_len);
 		}
 		++s;
 	}
