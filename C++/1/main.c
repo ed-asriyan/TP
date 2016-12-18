@@ -315,22 +315,29 @@ char** div_format(const char** s) {
 			// 7. move begin index;
 			// 8. increase i by tag length;
 			if (is_open_tag(*s + i)) {
+				// append current_str by data on current line
+				append_str(&current_str, ULONG_MAX, (str + begin_pos), (i - begin_pos));
+
+				// if current_str contains useful characters add it to the vector
+				// and reset current_str & is_empty = 1
 				if (!is_empty) {
 					add_string_vector(vector, current_str);
 					current_str = NULL;
+					is_empty = 1;
 				}
 
+				// add open tag to the vector
 				char* tag = (char*) malloc(sizeof(char) * (level * OFFSET + 6));
 				memset(tag, ' ', OFFSET * level);
 				memcpy(tag + (level * OFFSET), "<div>", 5);
 				tag[level * OFFSET + 6] = '\0';
 				add_string_vector(vector, tag);
 
+				// increase level
 				++level;
-				append_str(&current_str, ULONG_MAX, (str + begin_pos), (i - begin_pos));
-				is_empty = 1;
 
-				// if level != 0 add offset
+				// add offset to the current_str beginning
+				// if no level offset is not necessary
 				if (level) {
 					current_str = (char*) malloc(sizeof(char) * (level * OFFSET + 1));
 					memset(current_str, ' ', OFFSET * level);
@@ -341,13 +348,19 @@ char** div_format(const char** s) {
 
 				begin_pos = i += 5;
 			} else if (is_close_tag(*s + i)) {
+				// decrease level
 				--level;
+
+				// if current_str contains useful characters add it to the vector
+				// and reset current_str & is_empty = 1
 				if (!is_empty) {
 					append_str(&current_str, ULONG_MAX, (str + begin_pos), (i - begin_pos));
 					add_string_vector(vector, current_str);
 					is_empty = 1;
 				}
-				// if level != 0 add offset
+
+				// add offset to the current_str beginning
+				// if no level offset is not necessary
 				if (level) {
 					current_str = (char*) malloc(sizeof(char) * (level * OFFSET + 1));
 					memset(current_str, ' ', level * OFFSET);
@@ -356,6 +369,7 @@ char** div_format(const char** s) {
 					current_str = NULL;
 				}
 
+				// add close tag to the vector
 				char* tag = (char*) malloc(sizeof(char) * (level * OFFSET + 7));
 				memset(tag, ' ', OFFSET * level);
 				memcpy(tag + (level * OFFSET), "</div>", 6);
@@ -375,7 +389,7 @@ char** div_format(const char** s) {
 		}
 
 		// 'if' block for empty line safety
-		if (begin_pos != str_len) {
+		if (!is_empty) {
 			append_str(&current_str, ULONG_MAX, (str + begin_pos), str_len - begin_pos);
 		}
 		++s;
