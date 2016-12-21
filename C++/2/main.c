@@ -259,14 +259,14 @@ operand_t* scan_operand(FILE* in);
 
 /**
  * @brief Destroys the operand.
- * @param vector Pointer to operand instance.
+ * @param operand Pointer to operand instance.
  */
 void free_operand(operand_t* operand);
 
 /**
  * @brief Prints the operand to the output.
  * @param out Output stream.
- * @param vector Pointer to operand instance.
+ * @param operand Pointer to operand instance.
  */
 void print_operand(FILE* out, operand_t* operand);
 
@@ -418,30 +418,120 @@ operand_t* mlt_operand(const operand_t* a, const operand_t* b) {
 
 // -----------------------------------------------------------------
 
+// --- Operator ----------------------------------------------------
+
+struct Operator {
+	char name;
+	int weight;
+};
+
+typedef struct Operator operator_t;
+
+/**
+ * @brief Creates operator.
+ * @param c Operator character.
+ * @return Pointer to new operator instance.
+ */
+operator_t* create_operator(char c);
+
+/**
+ * @brief Destroys the operator.
+ * @param operator Pointer to operator instance.
+ */
+void free_operator(operator_t* operator);
+
+/**
+ * @brief Creates new operator instance.
+ * @param in Input stream.
+ * @return Pointer to new instance.
+ */
+operator_t* scan_operator(FILE* in);
+
+/**
+ * @brief Executes binary operator on two operands.
+ * @param operator Operator.
+ * @param a Left operand.
+ * @param b Right operand.
+ * @return Execute result.
+ */
+operand_t* execute_operator(const operator_t* operator, const operand_t* a, const operand_t* b);
+
+// --- Operator implementation ------------------------------------
+
+operator_t* create_operator(char c) {
+	if (c == '+' || c == '-' || c == '*' || c == ')' || c == '(') {
+		operator_t* result = (operator_t*) malloc(sizeof(operator_t));
+		if (result == NULL) {
+			return NULL;
+		}
+		result->name = c;
+		const char* OPERATORS = "+-*()";
+		for (size_t i = 0; i < sizeof(OPERATORS) / sizeof(OPERATORS[0]); ++i) {
+			if (c == OPERATORS[i]) {
+				result->weight = (int) i;
+				break;
+			}
+		}
+		return result;
+	} else {
+		return NULL;
+	}
+}
+
+operator_t* scan_operator(FILE* in) {
+	long init_pos = ftell(in);
+
+	skip_space(in);
+	char c;
+	if (fscanf(in, "%c", &c) != 1) {
+		fseek(in, init_pos, SEEK_SET);
+		return NULL;
+	}
+
+	return create_operator(c);
+}
+
+void free_operator(operator_t* operator) {
+	free(operator);
+}
+
+operand_t* execute_operator(const operator_t* operator, const operand_t* a, const operand_t* b) {
+	if (operator == NULL) {
+		return NULL;
+	}
+	switch (operator->name) {
+		case '+':
+			return add_operand(a, b);
+		case '-':
+			return sub_operand(a, b);
+		case '*':
+			return mlt_operand(a, b);
+		default:
+			return NULL;
+	}
+}
+
+// -----------------------------------------------------------------
+
 int main() {
 	FILE* f = fopen("in.txt", "r");
 	operand_t* a = scan_operand(f);
 	operand_t* b = scan_operand(f);
-	operand_t* c = add_operand(a, b);
-	operand_t* e = sub_operand(a, b);
-	operand_t* g = mlt_operand(a, b);
+	operator_t* o = scan_operator(f);
+
+	operand_t* r = execute_operator(o, a, b);
 
 	print_operand(stdout, a);
 	printf("\n");
 	print_operand(stdout, b);
 	printf("\n");
-	print_operand(stdout, c);
-	printf("\n");
-	print_operand(stdout, e);
-	printf("\n");
-	print_operand(stdout, g);
+	print_operand(stdout, r);
 	printf("\n");
 
 	free_operand(a);
 	free_operand(b);
-	free_operand(c);
-	free_operand(g);
-	free_operand(e);
+	free_operand(r);
+	free_operator(o);
 
 	fclose(f);
 
