@@ -64,6 +64,15 @@ void print_vector(FILE* out, const vector_t* vector);
  */
 vector_t* add_vector(const vector_t* a, const vector_t* b);
 
+/**
+ * @brief Subrtacts vectors a & b.
+ * @param a Left vector.
+ * @param b Right vector.
+ * @param result Result vector.
+ * @return Pointer to new vector if operation is completed; otherwise NULL.
+ */
+vector_t* sub_vector(const vector_t* a, const vector_t* b);
+
 // --- Vector implementation ---------------------------------------
 
 bool is_valid_vector_symbol(char c) {
@@ -206,6 +215,27 @@ vector_t* add_vector(const vector_t* a, const vector_t* b) {
 	return result;
 }
 
+vector_t* sub_vector(const vector_t* a, const vector_t* b) {
+	if (a == NULL || b == NULL) {
+		return NULL;
+	}
+
+	const int* a_coordinates = a->coordinates;
+	const int* b_coordinates = b->coordinates;
+	const size_t result_dimensions = MAX(a->dimensions, b->dimensions);
+	vector_t* result = create_vector(result_dimensions);
+	const size_t max = MIN(a->dimensions, b->dimensions);
+	for (size_t i = 0; i < max; ++i) {
+		result->coordinates[i] = a_coordinates[i] - b_coordinates[i];
+	}
+	const int* coordinates = MAX(a->dimensions, b->dimensions) == a->dimensions ? a->coordinates : b->coordinates;
+	for (size_t i = max; i < result_dimensions; ++i) {
+		result->coordinates[i] = coordinates[i];
+	}
+
+	return result;
+}
+
 // -----------------------------------------------------------------
 
 // --- Operand -----------------------------------------------------
@@ -248,6 +278,15 @@ void print_operand(FILE* out, operand_t* operand);
  * @return Pointer to new operand if operation is completed; otherwise NULL.
  */
 operand_t* add_operand(const operand_t* a, const operand_t* b);
+
+/**
+ * @brief Subtracts operands a & b.
+ * @param a Left operand.
+ * @param b Right operand.
+ * @param result Result operand.
+ * @return Pointer to new operand if operation is completed; otherwise NULL.
+ */
+operand_t* sub_operand(const operand_t* a, const operand_t* b);
 
 /**
  * @brief Multiplies operands a & b.
@@ -333,6 +372,25 @@ operand_t* add_operand(const operand_t* a, const operand_t* b) {
 	return result;
 }
 
+operand_t* sub_operand(const operand_t* a, const operand_t* b) {
+	if (a == NULL || b == NULL || !a->is_vector || !b->is_vector) {
+		return NULL;
+	}
+
+	operand_t* result = (operand_t*) malloc(sizeof(operand_t));
+	if (result == NULL) {
+		return NULL;
+	}
+	result->is_vector = true;
+	result->value.vector = sub_vector(a->value.vector, b->value.vector);
+	if (result->value.vector == NULL) {
+		free(result);
+		return NULL;
+	}
+
+	return result;
+}
+
 operand_t* mlt_operand(const operand_t* a, const operand_t* b) {
 	if (a == NULL || b == NULL || a->is_vector == b->is_vector) {
 		return NULL;
@@ -365,7 +423,8 @@ int main() {
 	operand_t* a = scan_operand(f);
 	operand_t* b = scan_operand(f);
 	operand_t* c = add_operand(a, b);
-	operand_t* e = mlt_operand(a, b);
+	operand_t* e = sub_operand(a, b);
+	operand_t* g = mlt_operand(a, b);
 
 	print_operand(stdout, a);
 	printf("\n");
@@ -375,10 +434,13 @@ int main() {
 	printf("\n");
 	print_operand(stdout, e);
 	printf("\n");
+	print_operand(stdout, g);
+	printf("\n");
 
 	free_operand(a);
 	free_operand(b);
 	free_operand(c);
+	free_operand(g);
 	free_operand(e);
 
 	fclose(f);
