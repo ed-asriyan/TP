@@ -5,6 +5,8 @@
 
 // --- Help functions -----------------------------------------------
 
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+
 void skip_space(FILE* f) {
 	while (!feof(f)) {
 		char c;
@@ -44,6 +46,15 @@ void free_vector(vector_t* vector);
  * @param vector Pointer to vector instance.
  */
 void print_vector(FILE* out, const vector_t* vector);
+
+/**
+ * @brief Adds vectors a & b.
+ * @param a Left vector.
+ * @param b Right vector.
+ * @param result Result vector.
+ * @return Pointer to new vector if operation is completed; otherwise NULL.
+ */
+vector_t* add_vector(const vector_t* a, const vector_t* b);
 
 // --- Vector implementation ---------------------------------------
 
@@ -145,6 +156,36 @@ void print_vector(FILE* out, const vector_t* vector) {
 		}
 	}
 	fprintf(out, "}");
+}
+
+vector_t* add_vector(const vector_t* a, const vector_t* b) {
+	if (a == NULL || b == NULL) {
+		return NULL;
+	}
+
+	vector_t* result = (vector_t*) malloc(sizeof(vector_t));
+	if (result == NULL) {
+		return NULL;
+	}
+	result->coordinates = NULL;
+	result->dimensions = NULL;
+
+	const int* a_coordinates = a->coordinates;
+	const int* b_coordinates = b->coordinates;
+	size_t result_dimensions = MIN(a->dimensions, b->dimensions);
+	int* result_coordinates = (int*) malloc(sizeof(int) * result_dimensions);
+	if (result_coordinates == NULL) {
+		free_vector(result);
+		return NULL;
+	}
+
+	for (size_t i = 0; i < result_dimensions; ++i) {
+		result_coordinates[i] = a_coordinates[i] + b_coordinates[i];
+	}
+
+	result->coordinates = result_coordinates;
+	result->dimensions = result_dimensions;
+	return result;
 }
 
 // -----------------------------------------------------------------
