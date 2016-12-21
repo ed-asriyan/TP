@@ -29,10 +29,17 @@ typedef struct Vector vector_t;
 
 /**
  * @brief Creates new vector instance.
+ * @param dimensions Dimensions count.
+ * @return Pointer to new instance.
+ */
+vector_t* create_vector(size_t dimensions);
+
+/**
+ * @brief Reads vector to new instance.
  * @param in Input stream.
  * @return Pointer to new instance.
  */
-vector_t* create_vector(FILE* in);
+vector_t* scan_vector(FILE* in);
 
 /**
  * @brief Destroys the vector.
@@ -62,11 +69,30 @@ bool is_valid_vector_symbol(char c) {
 	return isdigit(c) || c == ',' || c == ' ' || c == '{' || c == '}';
 }
 
-vector_t* create_vector(FILE* in) {
+vector_t* create_vector(size_t dimensions) {
+	vector_t* result = (vector_t*) malloc(sizeof(vector_t));
+	if (result == NULL) {
+		return NULL;
+	}
+	result->coordinates = (int*) malloc(sizeof(int) * dimensions);
+	if (result->coordinates == NULL) {
+		free(result);
+		return NULL;
+	}
+	result->dimensions = dimensions;
+	return result;
+}
+
+vector_t* scan_vector(FILE* in) {
+	if (in == NULL) {
+		return NULL;
+	}
+
 	long init_pos = ftell(in);
 
 	skip_space(in);
-	if (fgetc(in) != '{') {
+	const int init_symb_int = fgetc(in);
+	if (init_symb_int == EOF || (char) init_symb_int != '{') {
 		// vector must starts with '{'
 		fseek(in, init_pos, SEEK_SET);
 		return NULL;
@@ -163,28 +189,139 @@ vector_t* add_vector(const vector_t* a, const vector_t* b) {
 		return NULL;
 	}
 
-	vector_t* result = (vector_t*) malloc(sizeof(vector_t));
+	const int* a_coordinates = a->coordinates;
+	const int* b_coordinates = b->coordinates;
+	const size_t result_dimensions = MIN(a->dimensions, b->dimensions);
+	vector_t* result = create_vector(result_dimensions);
+
+	for (size_t i = 0; i < result_dimensions; ++i) {
+		result->coordinates[i] = a_coordinates[i] + b_coordinates[i];
+	}
+
+	return result;
+}
+
+// -----------------------------------------------------------------
+
+// --- Operand -----------------------------------------------------
+
+struct Operand {
+	bool is_vector;
+	union {
+		vector_t* vector;
+		int number;
+	} value;
+};
+
+typedef struct Operand operand_t;
+
+/**
+ * @brief Creates new operand instance.
+ * @param in Input stream.
+ * @return Pointer to new instance.
+ */
+operand_t* scan_operand(FILE* in);
+
+/**
+ * @brief Destroys the operand.
+ * @param vector Pointer to operand instance.
+ */
+void free_operand(operand_t* operand);
+
+/**
+ * @brief Prints the operand to the output.
+ * @param out Output stream.
+ * @param vector Pointer to operand instance.
+ */
+void print_operand(FILE* out, operand_t* operand);
+
+/**
+ * @brief Multiplies operands a & b.
+ * @param a Left operand.
+ * @param b Right operand.
+ * @param result Result operand.
+ * @return Pointer to new operand if operation is completed; otherwise NULL.
+ */
+operand_t* mlt_operand(const operand_t* a, const operand_t* b);
+
+// --- Operand implementation --------------------------------------
+
+operand_t* scan_operand(FILE* in) {
+	if (in == NULL) {
+		return NULL;
+	}
+
+	long init_pos = ftell(in);
+
+	operand_t* result = (operand_t*) malloc(sizeof(operand_t));
 	if (result == NULL) {
 		return NULL;
 	}
-	result->coordinates = NULL;
-	result->dimensions = NULL;
 
-	const int* a_coordinates = a->coordinates;
-	const int* b_coordinates = b->coordinates;
-	size_t result_dimensions = MIN(a->dimensions, b->dimensions);
-	int* result_coordinates = (int*) malloc(sizeof(int) * result_dimensions);
-	if (result_coordinates == NULL) {
-		free_vector(result);
+	if (fscanf(in, "%d", &result->value.number) == 1) {
+		// if operand is number
+		result->is_vector = false;
+		return result;
+	}
+
+	// otherwise it must be a vector
+	result->value.vector = scan_vector(in);
+	if (result->value.vector == NULL) {
+		free(result);
+		return NULL;
+	}
+	result->is_vector = true;
+	return result;
+
+	free(result);
+	return NULL;
+}
+
+void free_operand(operand_t* operand) {
+	if (operand == NULL) {
+		return;
+	}
+
+	if (operand->is_vector) {
+		free_vector(operand->value.vector);
+	}
+	free(operand);
+}
+
+void print_operand(FILE* out, operand_t* operand) {
+	if (operand == NULL) {
+		return;
+	}
+
+	if (operand->is_vector) {
+		print_vector(out, operand->value.vector);
+	} else {
+		fprintf(out, "%d", operand->value.number);
+	}
+}
+
+operand_t* mlt_operand(const operand_t* a, const operand_t* b) {
+	if (a == NULL || b == NULL || a->is_vector == b->is_vector) {
 		return NULL;
 	}
 
-	for (size_t i = 0; i < result_dimensions; ++i) {
-		result_coordinates[i] = a_coordinates[i] + b_coordinates[i];
+	int number = a->is_vector ? b->value.number : a->value.number;
+	vector_t* vector = a->is_vector ? a->value.vector : b->value.vector;
+
+	operand_t* result = (operand_t*) malloc(sizeof(operand_t));
+	if (result == NULL) {
+		return NULL;
+	}
+	result->is_vector = true;
+	result->value.vector = create_vector(vector->dimensions);
+	if (result->value.vector == NULL) {
+		return NULL;
 	}
 
-	result->coordinates = result_coordinates;
-	result->dimensions = result_dimensions;
+	for (size_t i = 0, size = vector->dimensions; i < size; ++i) {
+		result->value.vector->coordinates[i] = vector->coordinates[i] * number;
+	}
+
 	return result;
 }
 
