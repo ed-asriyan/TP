@@ -156,15 +156,20 @@ int resize_string_vector(string_vector_t* vector) {
 	}
 
 	const int RESIZE_FACTOR = 2;
-	char** new_buffer = (char**) realloc(vector->buffer, sizeof(char*) * ((vector->buffer_size *= RESIZE_FACTOR) + 1));
+	size_t new_buffer_size = vector->buffer_size * RESIZE_FACTOR;
+	if (!new_buffer_size) {
+		new_buffer_size = RESIZE_FACTOR;
+	}
+	char** new_buffer = (char**) realloc(vector->buffer, sizeof(char*) * (new_buffer_size));
 	if (new_buffer == NULL) {
 		return 0;
 	}
 	vector->buffer = new_buffer;
+	vector->buffer_size = new_buffer_size;
 
 
 	// remaining no-initialized items
-	for (size_t i = vector->size; i <= vector->buffer_size; ++i) {
+	for (size_t i = vector->size; i < vector->buffer_size; ++i) {
 		vector->buffer[i] = NULL;
 	}
 
@@ -179,7 +184,7 @@ int resize_string_vector(string_vector_t* vector) {
  */
 int add_string_vector(string_vector_t* vector, char* str) {
 	if (vector == NULL) return 0;
-	if (vector->size == vector->buffer_size) {
+	if (vector->size + 1 >= vector->buffer_size) {
 		if (!resize_string_vector(vector)) {
 			return 0;
 		}
@@ -298,8 +303,11 @@ string_vector_t* scan_string_vector(FILE* in) {
 int cmp_str_begin(const char* a, const char* b) {
 	size_t a_len = strlen(a);
 	size_t b_len = strlen(b);
-	size_t len = MIN(a_len, b_len);
-	for (size_t i = 0; i < len; ++i) {
+
+	if (a_len < b_len) {
+		return 0;
+	}
+	for (size_t i = 0; i < b_len; ++i) {
 		if (a[i] != b[i]) {
 			return 0;
 		}
