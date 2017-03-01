@@ -6,7 +6,8 @@ WITH sorted AS (
     ORDER BY movie.title
 )
 SELECT
-  string_agg(sorted.title, ',' ORDER BY sorted.title),
+  string_agg(sorted.title, ','
+  ORDER BY sorted.title),
   sorted.director
 FROM sorted
 GROUP BY sorted.director
