@@ -1,4 +1,5 @@
 SELECT reviewer.name
 FROM reviewer
   JOIN rating ON reviewer.rid = rating.rid
-WHERE rating.ratingdate IS NULL;
+WHERE rating.ratingdate IS NULL
+ORDER BY reviewer.name;
