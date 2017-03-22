@@ -1,12 +1,6 @@
-SELECT name
-FROM reviewer
-WHERE reviewer.rid IN (
-  SELECT rid
-  FROM rating
-  WHERE rating.mid IN (
-    SELECT mid
-    FROM movie
-    WHERE movie.title = 'Gone with the Wind'
-  )
-)
+SELECT DISTINCT reviewer.name
+FROM movie
+  JOIN rating ON movie.mid = rating.mid
+  JOIN reviewer ON rating.rid = reviewer.rid
+WHERE movie.title = 'Gone with the Wind'
 ORDER BY reviewer.name;
