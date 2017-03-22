@@ -1,8 +1,4 @@
-SELECT name
+SELECT reviewer.name
 FROM reviewer
-WHERE reviewer.rid IN (
-  SELECT rid
-  FROM rating
-  WHERE ratingdate IS NULL
-)
-ORDER BY reviewer.name;
+  JOIN rating ON reviewer.rid = rating.rid
+WHERE rating.ratingdate IS NULL;
