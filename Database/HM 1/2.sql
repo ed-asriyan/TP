@@ -1,8 +1,6 @@
-SELECT movie.year
+SELECT DISTINCT movie.year
 FROM movie
-WHERE movie.mid IN (
-  SELECT mID
-  FROM rating
-  WHERE rating.stars = 5 OR rating.stars = 4
-)
+  JOIN rating ON movie.mid = rating.mid
+  JOIN reviewer ON rating.rid = reviewer.rid
+WHERE (rating.stars = 4 OR rating.stars = 5)
 ORDER BY movie.year;
