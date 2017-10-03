@@ -1,0 +1,49 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.tp.ed.rk1.CubeFragment">
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        tools:ignore="HardcodedText">
+
+    <EditText
+        android:id="@+id/a_cube"
+        android:hint="@string/side"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="numberSigned|numberDecimal" />
+
+    <EditText
+        android:id="@+id/b_cube"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="numberSigned|numberDecimal"
+        android:hint="@string/side"/>
+
+    <EditText
+        android:id="@+id/c_cube"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="numberSigned|numberDecimal"
+        android:hint="@string/side"/>
+
+    <Button
+        android:id="@+id/solver_cube"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/title_solve" />
+
+    <TextView
+        android:id="@+id/result_cube"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textSize="20sp"/>
+    </LinearLayout>
+
+</FrameLayout>
