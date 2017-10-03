@@ -1,0 +1,42 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.tp.ed.rk1.RectangleFragment">
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        tools:ignore="HardcodedText">
+
+        <EditText
+            android:id="@+id/a_rectangle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/side"
+            android:inputType="numberSigned|numberDecimal" />
+
+        <EditText
+            android:id="@+id/b_rectangle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/side"
+            android:inputType="numberSigned|numberDecimal" />
+
+        <Button
+            android:id="@+id/solver_rectangle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/title_solve" />
+
+        <TextView
+            android:id="@+id/result_rectangle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textSize="20sp" />
+    </LinearLayout>
+
+</FrameLayout>

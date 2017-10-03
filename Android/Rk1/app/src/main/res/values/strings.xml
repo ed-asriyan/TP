@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Rk1</string>
+    <string name="title_circle">Circle</string>
+    <string name="title_rectangle">Rectangle</string>
+    <string name="title_cube">Cube</string>
+
+    <string name="radius">Radius</string>
+    <string name="side">Side</string>
+
+    <string name="title_solve">=</string>
+
+    <string name="error">Some values are empty</string>
+</resources>
